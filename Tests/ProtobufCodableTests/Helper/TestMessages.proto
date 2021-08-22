@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package PB;
+
+message BasicMessage {
+    
+    double double = 1;
+    
+    float float = 2;
+    
+    int32 int32 = 3;
+    
+    int64 int64 = 4;
+    
+    uint32 unsignedInt32 = 5;
+    
+    uint64 unsignedInt64 = 6;
+    
+    sint32 signedInt32 = 7;
+    
+    sint64 signedInt64 = 8;
+    
+    fixed32 fixedInt32 = 9;
+    
+    fixed64 fixedInt64 = 10;
+    
+    sfixed32 signedFixedInt32 = 11;
+    
+    sfixed64 signedFixedInt64 = 12;
+    
+    bool boolean = 13;
+    
+    string string = 14;
+    
+    bytes bytes = 15;
+}
+
+message NestedMessage {
+    
+    BasicMessage basic = 1;
+    
+    message Nested {
+        
+        double double = 1;
+        
+        uint32 uint = 2;
+    }
+    
+    Nested nested = 2;
+}
+
+message DeepNestedMessage {
+    
+    BasicMessage basic = 1;
+    
+    NestedMessage nested = 2;
+}
+
+message Repeated {
+    
+    repeated uint32 unsigneds = 1;
+    
+    repeated BasicMessage messages = 2;
+}
+
+message DictContainer {
+    
+    map<string, int32> intDict = 1;
+    
+    map<uint32, BasicMessage> messageDict = 2;
+}
+
+message OneOfMessage {
+    
+    oneof test_oneof {
+        string name = 2;
+        BasicMessage basic = 4;
+    }
+}
