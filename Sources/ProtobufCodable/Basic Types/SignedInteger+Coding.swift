@@ -20,6 +20,12 @@ extension Int64: BinaryPrimitiveEncodable, FixedLengthWireType {
     public var fixedLengthWireType: WireType { .length64 }
 }
 
+extension Int: BinaryPrimitiveEncodable {
+    
+    // Note: `Int` does not conform to `FixedLengthWireType`,
+    // because it may have different width on different systems
+}
+
 
 
 extension SignedInteger {

@@ -132,12 +132,15 @@ struct DeepNestedMessage: Codable {
 struct DictContainer: Encodable {
     
     enum CodingKeys: Int, CodingKey {
-        case intDict = 1
-        case messageDict = 2
+        case stringDict = 1
+        case uintDict = 2
+        case intDict = 3
     }
     
-    var intDict: Dictionary<String,Int32> = [:]
+    var stringDict: Dictionary<String,Int32> = [:]
 
-    var messageDict: Dictionary<UInt32, BasicMessage> = [:]
+    var uintDict: Dictionary<UInt32, BasicMessage> = [:]
+    
+    var intDict: Dictionary<Int,BasicMessage> = [:]
 
 }

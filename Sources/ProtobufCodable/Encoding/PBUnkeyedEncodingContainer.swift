@@ -1,6 +1,6 @@
 import Foundation
 
-final class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
+class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     
     var encoder: Encoder
     
@@ -101,11 +101,8 @@ final class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
         trace("\(path)")
         return encoder
     }
-}
-
-extension PBUnkeyedEncodingContainer: CustomStringConvertible {
     
-    var description: String {
+    override var description: String {
         description(forClass: "Unkeyed")
     }
 }

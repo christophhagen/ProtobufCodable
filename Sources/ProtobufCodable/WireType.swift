@@ -76,12 +76,10 @@ extension WireType: CustomStringConvertible {
     }
 }
 
-public protocol WireTypeProvider {
+extension WireType {
     
-    var wireType: WireType { get }
-}
-
-public protocol FixedLengthWireType {
-    
-    var fixedLengthWireType: WireType { get }
+    func tag(with field: Int) -> Data {
+        let typeAndTag = (field << 3) + rawValue
+        return typeAndTag.binaryData()
+    }
 }

@@ -154,63 +154,13 @@ struct PB_DictContainer {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var intDict: Dictionary<String,Int32> = [:]
+  var stringDict: Dictionary<String,Int32> = [:]
 
-  var messageDict: Dictionary<UInt32,PB_BasicMessage> = [:]
+  var uintDict: Dictionary<UInt32,PB_BasicMessage> = [:]
 
-  var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  init() {}
-}
-
-struct PB_OneOfMessage {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  var testOneof: PB_OneOfMessage.OneOf_TestOneof? = nil
-
-  var name: String {
-    get {
-      if case .name(let v)? = testOneof {return v}
-      return String()
-    }
-    set {testOneof = .name(newValue)}
-  }
-
-  var basic: PB_BasicMessage {
-    get {
-      if case .basic(let v)? = testOneof {return v}
-      return PB_BasicMessage()
-    }
-    set {testOneof = .basic(newValue)}
-  }
+  var intDict: Dictionary<Int64,PB_BasicMessage> = [:]
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  enum OneOf_TestOneof: Equatable {
-    case name(String)
-    case basic(PB_BasicMessage)
-
-  #if !swift(>=4.1)
-    static func ==(lhs: PB_OneOfMessage.OneOf_TestOneof, rhs: PB_OneOfMessage.OneOf_TestOneof) -> Bool {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch (lhs, rhs) {
-      case (.name, .name): return {
-        guard case .name(let l) = lhs, case .name(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.basic, .basic): return {
-        guard case .basic(let l) = lhs, case .basic(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      default: return false
-      }
-    }
-  #endif
-  }
 
   init() {}
 }
@@ -524,8 +474,9 @@ extension PB_Repeated: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 extension PB_DictContainer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".DictContainer"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "intDict"),
-    2: .same(proto: "messageDict"),
+    1: .same(proto: "stringDict"),
+    2: .same(proto: "uintDict"),
+    3: .same(proto: "intDict"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -534,84 +485,31 @@ extension PB_DictContainer: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufInt32>.self, value: &self.intDict) }()
-      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,PB_BasicMessage>.self, value: &self.messageDict) }()
+      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufInt32>.self, value: &self.stringDict) }()
+      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,PB_BasicMessage>.self, value: &self.uintDict) }()
+      case 3: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufInt64,PB_BasicMessage>.self, value: &self.intDict) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.intDict.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufInt32>.self, value: self.intDict, fieldNumber: 1)
+    if !self.stringDict.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString,SwiftProtobuf.ProtobufInt32>.self, value: self.stringDict, fieldNumber: 1)
     }
-    if !self.messageDict.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,PB_BasicMessage>.self, value: self.messageDict, fieldNumber: 2)
+    if !self.uintDict.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,PB_BasicMessage>.self, value: self.uintDict, fieldNumber: 2)
+    }
+    if !self.intDict.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufInt64,PB_BasicMessage>.self, value: self.intDict, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: PB_DictContainer, rhs: PB_DictContainer) -> Bool {
+    if lhs.stringDict != rhs.stringDict {return false}
+    if lhs.uintDict != rhs.uintDict {return false}
     if lhs.intDict != rhs.intDict {return false}
-    if lhs.messageDict != rhs.messageDict {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension PB_OneOfMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".OneOfMessage"
-  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .same(proto: "name"),
-    4: .same(proto: "basic"),
-  ]
-
-  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 2: try {
-        if self.testOneof != nil {try decoder.handleConflictingOneOf()}
-        var v: String?
-        try decoder.decodeSingularStringField(value: &v)
-        if let v = v {self.testOneof = .name(v)}
-      }()
-      case 4: try {
-        var v: PB_BasicMessage?
-        if let current = self.testOneof {
-          try decoder.handleConflictingOneOf()
-          if case .basic(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {self.testOneof = .basic(v)}
-      }()
-      default: break
-      }
-    }
-  }
-
-  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every case branch when no optimizations are
-    // enabled. https://github.com/apple/swift-protobuf/issues/1034
-    switch self.testOneof {
-    case .name?: try {
-      guard case .name(let v)? = self.testOneof else { preconditionFailure() }
-      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
-    }()
-    case .basic?: try {
-      guard case .basic(let v)? = self.testOneof else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case nil: break
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  static func ==(lhs: PB_OneOfMessage, rhs: PB_OneOfMessage) -> Bool {
-    if lhs.testOneof != rhs.testOneof {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

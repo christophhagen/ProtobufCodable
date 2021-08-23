@@ -65,15 +65,9 @@ message Repeated {
 
 message DictContainer {
     
-    map<string, int32> intDict = 1;
+    map<string, int32> stringDict = 1;
     
-    map<uint32, BasicMessage> messageDict = 2;
-}
-
-message OneOfMessage {
+    map<uint32, BasicMessage> uintDict = 2;
     
-    oneof test_oneof {
-        string name = 2;
-        BasicMessage basic = 4;
-    }
+    map<int64, BasicMessage> intDict = 3;
 }

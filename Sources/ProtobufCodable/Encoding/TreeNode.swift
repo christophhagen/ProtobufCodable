@@ -1,6 +1,6 @@
 import Foundation
 
-class TreeNode {
+class TreeNode: CustomStringConvertible {
     
     var codingPath: [CodingKey]
     
@@ -76,4 +76,7 @@ class TreeNode {
         return child
     }
 
+    var description: String {
+        description(forClass: "TreeNode")
+    }
 }

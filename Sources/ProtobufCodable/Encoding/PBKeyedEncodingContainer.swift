@@ -1,14 +1,6 @@
 import Foundation
 
-extension WireType {
-    
-    func tag(with field: Int) -> Data {
-        let typeAndTag = (field << 3) + rawValue
-        return typeAndTag.binaryData()
-    }
-}
-
-final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
+class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
     
     var encoder: Encoder
     
@@ -27,7 +19,7 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         throw ProtobufEncodingError.notImplemented
     }
     
-    private func encodePrimitive(_ primitive: BinaryPrimitiveEncodable, forField field: Int) throws {
+    func encodePrimitive(_ primitive: BinaryPrimitiveEncodable, forField field: Int) throws {
         guard !primitive.isDefaultValue else {
             trace("\(path) - Ommitting default value for key '\(field)'")
             return
@@ -36,7 +28,7 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         try encodeBinary(primitive, forField: field)
     }
     
-    private func encodeBinary(_ binary: BinaryEncodable, forField field: Int) throws {
+    func encodeBinary(_ binary: BinaryEncodable, forField field: Int) throws {
         trace("\(path) - Encoding binary type '\(type(of: binary))' (\(binary)) for key '\(field)'")
         try addChild {
             DataNode(data: try binary.binaryData(),
@@ -46,7 +38,7 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         }
     }
     
-    private func encodeChild(_ value: Encodable, forKey key: CodingKey) throws {
+    func encodeChild(_ value: Encodable, forKey key: CodingKey) throws {
         trace("\(path) - Encoding '\(type(of: value))' (\(value)) for key '\(key.stringValue)'")
         let child = addChild {
             EncodingNode(parent: self, key: key)
@@ -54,7 +46,7 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         try value.encode(to: child)
     }
     
-    private func encodeDict(_ value: Encodable, forKey key: CodingKey) throws {
+    func encodeDict(_ value: Encodable, forKey key: CodingKey) throws {
         let child = addChild {
             DictNode(parent: self, key: key)
         }
@@ -72,7 +64,6 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         case let encodable as BinaryEncodable:
             try encodeBinary(encodable, forField: field)
         case is Dictionary<AnyHashable, Any>:
-            print("Found dict \(type(of: value))")
             try encodeDict(value, forKey: key)
         default:
             try encodeChild(value, forKey: key)
@@ -103,11 +94,8 @@ final class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingCon
         trace("\(path)")
         return encoder
     }
-}
-
-extension PBKeyedEncodingContainer: CustomStringConvertible {
     
-    var description: String {
+    override var description: String {
         description(forClass: "Keyed")
     }
 }

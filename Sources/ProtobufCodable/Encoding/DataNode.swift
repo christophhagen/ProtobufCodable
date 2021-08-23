@@ -20,13 +20,8 @@ final class DataNode: TreeNode {
         }
         return tag + data.count.variableLengthEncoding + data
     }
-}
-
-extension DataNode: CustomStringConvertible {
     
-    var description: String {
+    override var description: String {
         description(forClass: "Data")
-//        let data = getEncodedData()
-//        return "Data \(path): \(data) -> \(data.bytes)"
     }
 }

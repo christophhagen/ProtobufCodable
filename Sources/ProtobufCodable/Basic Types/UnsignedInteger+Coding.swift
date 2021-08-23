@@ -24,6 +24,12 @@ extension UInt64: BinaryPrimitiveEncodable, FixedLengthWireType {
     public var fixedLengthWireType: WireType { .length64 }
 }
 
+extension UInt: BinaryPrimitiveEncodable {
+    
+    // Note: `UInt` does not conform to `FixedLengthWireType`,
+    // because it may have different width on different systems
+}
+
 extension UnsignedInteger {
     
     public func binaryData() -> Data {

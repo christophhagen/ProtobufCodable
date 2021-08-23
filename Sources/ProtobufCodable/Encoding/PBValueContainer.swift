@@ -35,11 +35,8 @@ final class PBValueContainer: TreeNode, SingleValueEncodingContainer {
             throw ProtobufEncodingError.notImplemented
         }
     }
-}
-
-extension PBValueContainer: CustomStringConvertible {
     
-    var description: String {
+    override var description: String {
         description(forClass: "Value")
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-final class EncodingNode: TreeNode, Encoder {
+class EncodingNode: TreeNode, Encoder {
     
     public var userInfo: [CodingUserInfoKey : Any] {
         didSet { trace() }
@@ -27,7 +27,9 @@ final class EncodingNode: TreeNode, Encoder {
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
         }
-        let child = addChild { PBKeyedEncodingContainer<Key>(encoder: self, parent: self) }
+        let child = addChild {
+            PBKeyedEncodingContainer<Key>(encoder: self, parent: self)
+        }
         return KeyedEncodingContainer(child)
     }
     
@@ -48,20 +50,10 @@ final class EncodingNode: TreeNode, Encoder {
             PBValueContainer(parent: self)
         }
     }
-}
-
-// MARK: Protocol CustomStringConvertible
-
-extension EncodingNode: CustomStringConvertible {
     
-    var fieldDescription: String {
-        guard let f = field else {
-            return "No field"
-        }
-        return "Field \(f)"
-    }
+    // MARK: Protocol CustomStringConvertible
     
-    var description: String {
+    override var description: String {
         description(forClass: "Node")
     }
 }
