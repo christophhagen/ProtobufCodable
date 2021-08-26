@@ -2,9 +2,7 @@ import Foundation
 
 class EncodingNode: TreeNode, Encoder {
     
-    public var userInfo: [CodingUserInfoKey : Any] {
-        didSet { trace() }
-    }
+    public var userInfo: [CodingUserInfoKey : Any]
     
     init(parent: TreeNode, key: CodingKey) {
         self.userInfo = [:]
@@ -23,31 +21,28 @@ class EncodingNode: TreeNode, Encoder {
     // MARK: Encoder
     
     public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        trace("path \(path), keyedBy: \(type)")
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
         }
         let child = addChild {
-            PBKeyedEncodingContainer<Key>(encoder: self, parent: self)
+            KeyedContainer<Key>(encoder: self, parent: self)
         }
         return KeyedEncodingContainer(child)
     }
     
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        trace("path \(path)")
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
         }
         let child = addChild {
-            PBUnkeyedEncodingContainer(encoder: self, parent: self)
+            UnkeyedContainer(encoder: self, parent: self)
         }
         return child
     }
     
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        trace("path \(path)")
-        return addChild {
-            PBValueContainer(parent: self)
+        addChild {
+            ValueContainer(parent: self)
         }
     }
     

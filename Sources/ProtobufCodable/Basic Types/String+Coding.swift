@@ -1,6 +1,6 @@
 import Foundation
 
-extension String: BinaryPrimitiveEncodable {
+extension String: BinaryEncodable {
     
     /**
      Encodes a string using the UTF8 representation.
@@ -15,6 +15,7 @@ extension String: BinaryPrimitiveEncodable {
         return data
     }
     
+    /// The wire type of a string (`lengthDelimited`)
     public var wireType: WireType {
         .lengthDelimited
     }

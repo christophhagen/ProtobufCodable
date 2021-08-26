@@ -1,39 +1,106 @@
 import Foundation
 
-extension Int8: BinaryPrimitiveEncodable, FixedLengthWireType {
+// MARK: BinaryEncodable
+
+extension Int8: BinaryEncodable {
+    
+    public func binaryData() -> Data {
+        UInt8(bitPattern: self).binaryData()
+    }
+}
+
+extension Int16: BinaryEncodable { }
+
+extension Int32: BinaryEncodable { }
+
+extension Int64: BinaryEncodable { }
+
+extension Int: BinaryEncodable { }
+
+// MARK: FixedLengthWireType
+
+extension Int8: FixedLengthWireType {
     
     public var fixedLengthWireType: WireType { .length8 }
 }
 
-extension Int16: BinaryPrimitiveEncodable, FixedLengthWireType {
+extension Int16: FixedLengthWireType {
     
     public var fixedLengthWireType: WireType { .length16 }
 }
 
-extension Int32: BinaryPrimitiveEncodable, FixedLengthWireType {
+extension Int32: FixedLengthWireType {
     
     public var fixedLengthWireType: WireType { .length32 }
 }
 
-extension Int64: BinaryPrimitiveEncodable, FixedLengthWireType {
+extension Int64: FixedLengthWireType {
     
     public var fixedLengthWireType: WireType { .length64 }
 }
 
-extension Int: BinaryPrimitiveEncodable {
+// MARK: HostIndependentRepresentable
+
+extension Int8: HostIndependentRepresentable {
     
-    // Note: `Int` does not conform to `FixedLengthWireType`,
-    // because it may have different width on different systems
+    public var hostIndependentRepresentation: Int8 {
+        self
+    }
+    
+    public init(fromHostIndependentRepresentation value: Int8) {
+        self = value
+    }
 }
 
+extension Int16: HostIndependentRepresentable {
+    
+    public var hostIndependentRepresentation: UInt16 {
+        CFSwapInt16HostToLittle(.init(bitPattern: self))
+    }
+    
+    public init(fromHostIndependentRepresentation value: UInt16) {
+        self.init(bitPattern: CFSwapInt16LittleToHost(value))
+    }
+}
 
+extension Int32: HostIndependentRepresentable {
+    
+    public var hostIndependentRepresentation: UInt32 {
+        CFSwapInt32HostToLittle(.init(bitPattern: self))
+    }
+    
+    public init(fromHostIndependentRepresentation value: UInt32) {
+        self.init(bitPattern: CFSwapInt32LittleToHost(value))
+    }
+}
+
+extension Int64: HostIndependentRepresentable {
+    
+    public var hostIndependentRepresentation: UInt64 {
+        CFSwapInt64HostToLittle(.init(bitPattern: self))
+    }
+    
+    public init(fromHostIndependentRepresentation value: UInt64) {
+        self.init(bitPattern: CFSwapInt64LittleToHost(value))
+    }
+}
+
+// Note: `Int` does not conform to `FixedLengthWireType`,
+// because it may have different width on different systems
+
+// MARK: Common signed functions
 
 extension SignedInteger {
     
+    /**
+     Encodes the integer into binary data, using variable length encoding.
+     - Returns: The binary data of the converted value.
+     */
     public func binaryData() -> Data {
         variableLengthEncoding
     }
     
+    /// The wire type of the integer (`varint`)
     public var wireType: WireType {
         .varint
     }

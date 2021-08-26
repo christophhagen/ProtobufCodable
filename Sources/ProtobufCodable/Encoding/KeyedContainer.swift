@@ -1,6 +1,6 @@
 import Foundation
 
-class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
+class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
     
     var encoder: Encoder
     
@@ -9,43 +9,54 @@ class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainer
         super.init(type: parent.wireType, field: key.intValue!, codingPath: parent.codingPath + [key])
     }
     
-    init(encoder: Encoder, parent: TreeNode?) {
+    init(encoder: Encoder, parent: TreeNode) {
         self.encoder = encoder
-        super.init(type: parent?.wireType, field: parent?.field, codingPath: parent?.codingPath)
+        super.init(type: parent.wireType, field: parent.field, codingPath: parent.codingPath)
     }
     
     func encodeNil(forKey key: Key) throws {
-        trace()
         throw ProtobufEncodingError.notImplemented
     }
     
-    func encodePrimitive(_ primitive: BinaryPrimitiveEncodable, forField field: Int) throws {
+    /**
+     Encodes a primitive for the given key.
+     
+     A primitive is encoded using its wire type and field. Default values are omitted.
+     - Parameter value: The value to encode.
+     - Parameter key: The key to associate the value with.
+     */
+    func encodePrimitive(_ primitive: BinaryEncodable, forField field: Int) throws {
         guard !primitive.isDefaultValue else {
-            trace("\(path) - Ommitting default value for key '\(field)'")
             return
         }
-        trace("\(path) - Encoding primitive type '\(type(of: primitive))' (\(primitive)) for key '\(field)'")
-        try encodeBinary(primitive, forField: field)
-    }
-    
-    func encodeBinary(_ binary: BinaryEncodable, forField field: Int) throws {
-        trace("\(path) - Encoding binary type '\(type(of: binary))' (\(binary)) for key '\(field)'")
         try addChild {
-            DataNode(data: try binary.binaryData(),
-                     type: binary.wireType,
+            DataNode(data: try primitive.binaryData(),
+                     type: primitive.wireType,
                      field: field,
                      codingPath: codingPath)
         }
     }
     
+    /**
+     Encodes a message for the given key.
+     
+     - Parameter value: The value to encode.
+     - Parameter key: The key to associate the value with.
+     */
     func encodeChild(_ value: Encodable, forKey key: CodingKey) throws {
-        trace("\(path) - Encoding '\(type(of: value))' (\(value)) for key '\(key.stringValue)'")
         let child = addChild {
             EncodingNode(parent: self, key: key)
         }
         try value.encode(to: child)
     }
     
+    /**
+     Encodes the given dictionary for the given key.
+     
+     A dictionary is encoded as a set of key-value pairs, which are encoded within a container using field ids 1 (key) and 2 (value).
+     - Parameter value: The value to encode.
+     - Parameter key: The key to associate the value with.
+     */
     func encodeDict(_ value: Encodable, forKey key: CodingKey) throws {
         let child = addChild {
             DictNode(parent: self, key: key)
@@ -53,16 +64,18 @@ class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainer
         try value.encode(to: child)
     }
     
+    /**
+     Encodes the given value for the given key.
+     - Parameter value: The value to encode.
+     - Parameter key: The key to associate the value with.
+     */
     func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
         guard let field = key.intValue else {
-            trace("\(path) - Encoding '\(type(of: value))' (\(value)) for key '\(key.stringValue)': No int key")
             throw ProtobufEncodingError.missingIntegerCodingKey(key)
         }
         switch value {
-        case let primitive as BinaryPrimitiveEncodable:
+        case let primitive as BinaryEncodable:
             try encodePrimitive(primitive, forField: field)
-        case let encodable as BinaryEncodable:
-            try encodeBinary(encodable, forField: field)
         case is Dictionary<AnyHashable, Any>:
             try encodeDict(value, forKey: key)
         default:
@@ -70,29 +83,36 @@ class PBKeyedEncodingContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainer
         }
     }
     
+    /**
+     Stores a keyed container for the given key and returns it.
+     - Parameter keyType: The key type to use for the container.
+     - Parameter key: The key to encode the container for.
+     - Returns: A new keyed encoding container.
+     */
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        trace("\(path) for key '\(key.stringValue)'")
         let child = addChild {
-            PBKeyedEncodingContainer<NestedKey>(encoder: encoder, parent: self, key: key)
+            KeyedContainer<NestedKey>(encoder: encoder, parent: self, key: key)
         }
         return KeyedEncodingContainer(child)
     }
     
+    /**
+     Stores an unkeyed container for the given key and returns it.
+     - Parameter key: The key to encode the container for.
+     - Returns: A new unkeyed container.
+     */
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        trace("\(path)")
-        return addChild {
-            PBUnkeyedEncodingContainer(encoder: encoder, parent: self, key: key)
+        addChild {
+            UnkeyedContainer(encoder: encoder, parent: self, key: key)
         }
     }
     
     func superEncoder() -> Encoder {
-        trace("\(path)")
-        return encoder
+        encoder
     }
     
     func superEncoder(forKey key: Key) -> Encoder {
-        trace("\(path)")
-        return encoder
+        encoder
     }
     
     override var description: String {

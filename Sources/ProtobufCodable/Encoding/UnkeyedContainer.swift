@@ -1,6 +1,6 @@
 import Foundation
 
-class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
+class UnkeyedContainer: TreeNode, UnkeyedEncodingContainer {
     
     var encoder: Encoder
     
@@ -42,7 +42,6 @@ class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     }
     
     func encodeNil() throws {
-        trace("\(path)")
         throw ProtobufEncodingError.notImplemented
     }
 
@@ -57,7 +56,6 @@ class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     }
     
     private func encodeChild(_ value: Encodable) throws {
-        trace("\(path) - Encoding '\(type(of: value))' (\(value))")
         let child = addChild {
             EncodingNode(parent: self)
         }
@@ -76,9 +74,8 @@ class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     }
     
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        trace("\(path)")
         let child = addChild {
-            PBKeyedEncodingContainer<NestedKey>(encoder: encoder, parent: self)
+            KeyedContainer<NestedKey>(encoder: encoder, parent: self)
         }
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
@@ -87,9 +84,8 @@ class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     }
     
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        trace("\(path)")
         let child = addChild {
-            PBUnkeyedEncodingContainer(encoder: encoder, parent: self)
+            UnkeyedContainer(encoder: encoder, parent: self)
         }
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
@@ -98,8 +94,7 @@ class PBUnkeyedEncodingContainer: TreeNode, UnkeyedEncodingContainer {
     }
     
     func superEncoder() -> Encoder {
-        trace("\(path)")
-        return encoder
+        encoder
     }
     
     override var description: String {

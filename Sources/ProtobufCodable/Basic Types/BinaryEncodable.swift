@@ -1,5 +1,8 @@
 import Foundation
 
+/**
+ A protocol adopted by all types which can be converted to binary data.
+ */
 public protocol BinaryEncodable: WireTypeProvider, Codable {
     
     /**
@@ -9,21 +12,26 @@ public protocol BinaryEncodable: WireTypeProvider, Codable {
      - Returns: The binary data of the encoded value.
      */
     func binaryData() throws -> Data
-
-}
-
-public protocol BinaryPrimitiveEncodable: BinaryEncodable {
     
+    /**
+     The value is equal to the default value for the type.
+     */
     var isDefaultValue: Bool { get }
 }
 
-public extension BinaryPrimitiveEncodable where Self: AdditiveArithmetic {
+public extension BinaryEncodable where Self: AdditiveArithmetic {
     
+    /**
+     The value is equal to the default value for an integer (`zero`)
+     */
     var isDefaultValue: Bool { self == .zero }
 }
 
-public extension BinaryPrimitiveEncodable where Self: Collection {
+public extension BinaryEncodable where Self: Collection {
     
+    /**
+     The value is equal to the default value for a collection (`[]`)
+     */
     var isDefaultValue: Bool { isEmpty }
 }
 

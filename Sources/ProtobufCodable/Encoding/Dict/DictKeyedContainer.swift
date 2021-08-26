@@ -1,6 +1,6 @@
 import Foundation
 
-class DictKeyedContainer<Key: CodingKey>: PBKeyedEncodingContainer<Key> {
+class DictKeyedContainer<Key: CodingKey>: KeyedContainer<Key> {
     
     private enum DictCodingKey: Int, CodingKey {
         case key = 1
@@ -13,7 +13,7 @@ class DictKeyedContainer<Key: CodingKey>: PBKeyedEncodingContainer<Key> {
 
     override func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
         let child = addChild {
-            PBKeyedEncodingContainer<DictCodingKey>(encoder: encoder, parent: self)
+            KeyedContainer<DictCodingKey>(encoder: encoder, parent: self)
         }
         if let int = key.intValue {
             try child.encode(int, forKey: .key)

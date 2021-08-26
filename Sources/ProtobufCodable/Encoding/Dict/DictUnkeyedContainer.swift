@@ -1,6 +1,6 @@
 import Foundation
 
-final class DictUnkeyedContainer: PBUnkeyedEncodingContainer {
+final class DictUnkeyedContainer: UnkeyedContainer {
     
     private enum DictCodingKey: Int, CodingKey {
         case key = 1
@@ -10,14 +10,14 @@ final class DictUnkeyedContainer: PBUnkeyedEncodingContainer {
     /// Indicates if primitive values are encoded, to determine if the tag must be included for each container
     private var encodesPrimitives = false
     
-    private var currentPairContainer: PBKeyedEncodingContainer<DictCodingKey>?
+    private var currentPairContainer: KeyedContainer<DictCodingKey>?
 
     override func getEncodedData() -> Data {
         children.map { $0.getEncodedData() }.reduce(Data(), +)
     }
 
     private func encodeKey<K>(_ key: K) throws where K : Encodable {
-        let container = PBKeyedEncodingContainer<DictCodingKey>(encoder: encoder, parent: self)
+        let container = KeyedContainer<DictCodingKey>(encoder: encoder, parent: self)
         try container.encode(key, forKey: .key)
         self.currentPairContainer = container
     }

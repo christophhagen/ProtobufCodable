@@ -9,7 +9,6 @@ final class DictNode: EncodingNode {
     // MARK: Encoder
     
     public override func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        trace("path \(path), keyedBy: \(type)")
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
         }
@@ -20,7 +19,6 @@ final class DictNode: EncodingNode {
     }
     
     public override func unkeyedContainer() -> UnkeyedEncodingContainer {
-        trace("path \(path)")
         if wireType == nil && field != nil {
             wireType = .lengthDelimited
         }
@@ -31,9 +29,8 @@ final class DictNode: EncodingNode {
     }
     
     public override func singleValueContainer() -> SingleValueEncodingContainer {
-        trace("path \(path)")
-        return addChild {
-            PBValueContainer(parent: self)
+        addChild {
+            ValueContainer(parent: self)
         }
     }
     

@@ -2,6 +2,8 @@ import Foundation
 
 /**
  A wire type provides just enough information to find the length of the following value.
+ 
+ - Note: All wire types are defined in the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure) definition.
  */
 public enum WireType: Int {
     
@@ -13,7 +15,7 @@ public enum WireType: Int {
     case varint = 0
     
     /**
-     Fixed-length value of eight bytes
+     Fixed-length value of eight bytes.
      
      Used for: `fixed64`, `sfixed64`, `double`
      */
@@ -27,28 +29,40 @@ public enum WireType: Int {
     case lengthDelimited = 2
     
     /**
-     Start group
+     Start group.
      
      Used for: groups (deprecated).
      */
+    @available(*, deprecated, message: "Deprecated wire type")
     case startGroup = 3
     
     /**
-     End group
+     End group.
      
      Used for: groups (deprecated)
      */
+    @available(*, deprecated, message: "Deprecated wire type")
     case endGroup = 4
     
     /**
-     Fixed-length value of four bytes
+     Fixed-length value of four bytes.
      
      Used for: `fixed32`, `sfixed32`, `float`
      */
     case length32 = 5
     
+    /**
+     Fixed-length value of one byte.
+     
+     - Warning: Incompatible with the official protocol buffer definition.
+     */
     case length8 = 6
     
+    /**
+     Fixed-length value of two bytes.
+     
+     - Warning: Incompatible with the official protocol buffer definition.
+     */
     case length16 = 7
 }
 
@@ -78,8 +92,16 @@ extension WireType: CustomStringConvertible {
 
 extension WireType {
     
+    /**
+     Create a tag (field number + wire type).
+     
+     Each key in the streamed message is a `varint` with the value `(field_number << 3) | wire_type` – in other words, the last three bits of the number store the wire type. The definition of the tag/key encoding is available in the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure) documentation.
+     - Parameter field: The id of the field which is encoded with the wire type.
+     - Returns: The encoded tag.
+     - Note:
+     */
     func tag(with field: Int) -> Data {
-        let typeAndTag = (field << 3) + rawValue
+        let typeAndTag = (field << 3) | rawValue
         return typeAndTag.binaryData()
     }
 }

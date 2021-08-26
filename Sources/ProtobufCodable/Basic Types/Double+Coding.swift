@@ -1,13 +1,24 @@
 import Foundation
 
-extension Double: BinaryPrimitiveEncodable {
+extension Double: BinaryEncodable {
     
     public func binaryData() -> Data {
-        toData(CFConvertDoubleHostToSwapped(self)).swapped
+        hostIndependentBinaryData.swapped
     }
     
+    /// The wire type of a double (64 bit)
     public var wireType: WireType {
         .length64
     }
 }
 
+extension Double: HostIndependentRepresentable {
+    
+    public var hostIndependentRepresentation: CFSwappedFloat64 {
+        CFConvertDoubleHostToSwapped(self)
+    }
+    
+    public init(fromHostIndependentRepresentation value: CFSwappedFloat64) {
+        self = CFConvertDoubleSwappedToHost(value)
+    }
+}

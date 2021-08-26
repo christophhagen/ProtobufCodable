@@ -21,12 +21,8 @@ public struct ProtobufEncoder {
     }
     
     public func encode(_ value: Encodable) throws -> Data {
-//        if let data = value as? Data {
-//            return encode(data)
-//        }
         try value.encode(to: encoder)
-        trace()
-        encoder.printTree()
+        //encoder.printTree()
         return encoder.getEncodedData()
     }
     
