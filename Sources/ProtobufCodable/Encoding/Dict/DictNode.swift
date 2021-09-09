@@ -37,6 +37,6 @@ final class DictNode: EncodingNode {
     // MARK: Protocol CustomStringConvertible
     
     override var description: String {
-        description(forClass: "Dict")
+        nodeDescription(forClass: "Dict")
     }
 }

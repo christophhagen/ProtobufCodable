@@ -49,6 +49,6 @@ class EncodingNode: TreeNode, Encoder {
     // MARK: Protocol CustomStringConvertible
     
     override var description: String {
-        description(forClass: "Node")
+        nodeDescription(forClass: "Node")
     }
 }

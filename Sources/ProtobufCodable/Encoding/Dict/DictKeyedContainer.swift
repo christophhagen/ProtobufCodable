@@ -24,6 +24,6 @@ class DictKeyedContainer<Key: CodingKey>: KeyedContainer<Key> {
     }
     
     override var description: String {
-        description(forClass: "KeyedDict")
+        nodeDescription(forClass: "KeyedDict")
     }
 }

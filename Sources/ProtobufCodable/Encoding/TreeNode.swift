@@ -99,11 +99,11 @@ class TreeNode: CustomStringConvertible {
         ".root" + codingPath.map { "." + $0.stringValue }.joined()
     }
     
-    func description(forClass className: String) -> String {
+    func nodeDescription(forClass className: String) -> String {
         "\(className) \(path) (\(typeString), \(fieldString)): \(children.count) nodes -> \(getEncodedData().bytes)"
     }
 
     var description: String {
-        description(forClass: "TreeNode")
+        nodeDescription(forClass: "TreeNode")
     }
 }

@@ -116,6 +116,6 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
     }
     
     override var description: String {
-        description(forClass: "Keyed")
+        nodeDescription(forClass: "Keyed")
     }
 }

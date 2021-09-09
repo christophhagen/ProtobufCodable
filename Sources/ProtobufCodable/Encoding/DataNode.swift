@@ -32,6 +32,6 @@ final class DataNode: TreeNode {
     }
     
     override var description: String {
-        description(forClass: "Data")
+        nodeDescription(forClass: "Data")
     }
 }

@@ -29,6 +29,6 @@ final class ValueContainer: TreeNode, SingleValueEncodingContainer {
     }
     
     override var description: String {
-        description(forClass: "Value")
+        nodeDescription(forClass: "Value")
     }
 }

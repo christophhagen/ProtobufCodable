@@ -34,6 +34,6 @@ final class DictUnkeyedContainer: UnkeyedContainer {
     }
     
     override var description: String {
-        description(forClass: "DictUnkeyed")
+        nodeDescription(forClass: "DictUnkeyed")
     }
 }
