@@ -8,9 +8,14 @@ final class DataNode: TreeNode {
     /// The binary data stored in the node
     private let data: Data
     
-    init(data: Data, type: WireType? = nil, field: Int? = nil, codingPath: [CodingKey] = []) {
+    init(data: Data, type: WireType, field: Int, userInfo: [CodingUserInfoKey : Any], codingPath: [CodingKey] = []) {
         self.data = data
-        super.init(type: type, field: field, codingPath: codingPath)
+        super.init(type: type, field: field, userInfo: userInfo, codingPath: codingPath)
+    }
+    
+    init(data: Data, userInfo: [CodingUserInfoKey : Any], codingPath: [CodingKey] = []) {
+        self.data = data
+        super.init(type: nil, field: nil, userInfo: userInfo, codingPath: codingPath)
     }
     
     /**

@@ -12,6 +12,15 @@ extension Double: BinaryEncodable {
     }
 }
 
+extension Double: BinaryDecodable {
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let data = try byteProvider.getNextBytes(Self.binaryDataSize).swapped
+        try self.init(hostIndependentBinaryData: data)
+    }
+}
+
+
 extension Double: HostIndependentRepresentable {
     
     public var hostIndependentRepresentation: CFSwappedFloat64 {
@@ -21,4 +30,6 @@ extension Double: HostIndependentRepresentable {
     public init(fromHostIndependentRepresentation value: CFSwappedFloat64) {
         self = CFConvertDoubleSwappedToHost(value)
     }
+    
+    public static var empty: CFSwappedFloat64 { .init() }
 }

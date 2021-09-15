@@ -58,8 +58,8 @@ struct BasicMessage: Codable {
     var bytes: Data = .empty
 }
 
-extension BasicMessage {
-    
+extension BasicMessage: ProtobufComparable {
+
     var protobuf: PB_BasicMessage {
         .with {
             $0.double = double
@@ -79,68 +79,4 @@ extension BasicMessage {
             $0.bytes = bytes
         }
     }
-}
-
-struct Nested: Codable {
-    
-    enum CodingKeys: Int, CodingKey {
-        case double = 1
-        case uint = 2
-    }
-    
-    var double: Double = 0
-    
-    var uint: UInt32 = 0
-}
-
-struct NestedMessage: Codable {
-    
-    enum CodingKeys: Int, CodingKey {
-        case basic = 1
-        case nested = 2
-    }
-    
-    var basic: BasicMessage
-    
-    var nested: Nested
-}
-
-struct Repeated: Codable {
-    
-    enum CodingKeys: Int, CodingKey {
-        case unsigneds = 1
-        case messages
-    }
-    
-    var unsigneds: [UInt32] = []
-    
-    var messages: [BasicMessage] = []
-}
-
-struct DeepNestedMessage: Codable {
-    
-    enum CodingKeys: Int, CodingKey {
-        case basic = 1
-        case nested
-    }
-
-  var basic: BasicMessage
-    
-  var nested: NestedMessage
-}
-
-struct DictContainer: Encodable {
-    
-    enum CodingKeys: Int, CodingKey {
-        case stringDict = 1
-        case uintDict = 2
-        case intDict = 3
-    }
-    
-    var stringDict: Dictionary<String,Int32> = [:]
-
-    var uintDict: Dictionary<UInt32, BasicMessage> = [:]
-    
-    var intDict: Dictionary<Int,BasicMessage> = [:]
-
 }

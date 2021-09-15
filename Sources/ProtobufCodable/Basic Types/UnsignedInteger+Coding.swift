@@ -2,20 +2,24 @@ import Foundation
 
 // MARK: BinaryEncodable
 
-extension UInt8: BinaryEncodable {
+extension UInt8: BinaryCodable {
     
     public func binaryData() -> Data {
         [self].data
     }
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        self = try byteProvider.getNextByte()
+    }
 }
 
-extension UInt16: BinaryEncodable { }
+extension UInt16: BinaryCodable { }
 
-extension UInt32: BinaryEncodable { }
+extension UInt32: BinaryCodable { }
 
-extension UInt64: BinaryEncodable { }
+extension UInt64: BinaryCodable { }
 
-extension UInt: BinaryEncodable { }
+extension UInt: BinaryCodable { }
 
 // MARK: FixedLengthWireType
 
@@ -130,5 +134,47 @@ extension UnsignedInteger {
             // Set 8th bit to indicate another byte
             result.append(nextByte | 0x80)
         }
+    }
+    
+    /**
+     Decode an unsigned integer using variable length encoding.
+     
+     The first bit of each byte indicates if another byte follows.
+     The remaining 7 bit are the first 7 bit of the number.
+     - Throws: `BinaryDecodingError.missingData`
+     - Returns: The decoded unsigned integer.
+     */
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let value = try UInt64.from(byteProvider)
+        guard let result = Self.init(exactly: value) else {
+            throw ProtobufDecodingError.variableLengthEncodedValueOutOfRange
+        }
+        self = result
+    }
+}
+
+extension UInt64 {
+    
+    static func from(_ byteProvider: DecodingDataProvider) throws -> UInt64 {
+        var result: UInt64 = 0
+        
+        // There are always usable 7 bits per byte, for 9 bytes
+        for shift in stride(from: 0, through: 56, by: 7) {
+            let nextByte = UInt64(try byteProvider.getNextByte())
+            // Insert the last 7 bit of the byte at the end
+            result += UInt64(nextByte & 0x7F) << shift
+            // Check if an additional byte is coming
+            guard nextByte & 0x80 > 0 else {
+                return result
+            }
+        }
+        // If we're here, the 9th byte had the MSB set
+        let nextByte = UInt64(try byteProvider.getNextByte())
+        // Only 0x01 and 0x00 are valid for the 10th byte, or the UInt64 would overflow
+        guard nextByte & ~1 == 0 else {
+            throw ProtobufDecodingError.invalidVarintEncoding
+        }
+        result += UInt64(nextByte & 0x7F) << 63
+        return result
     }
 }

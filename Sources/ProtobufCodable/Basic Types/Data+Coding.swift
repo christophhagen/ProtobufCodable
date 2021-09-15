@@ -15,3 +15,11 @@ extension Data: BinaryEncodable {
         .lengthDelimited
     }
 }
+
+extension Data: BinaryDecodable {
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        #warning("Should we encode/decode the length for Data?")
+        self = byteProvider.getRemainingBytes()
+    }
+}

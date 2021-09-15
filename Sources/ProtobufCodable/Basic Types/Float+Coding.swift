@@ -11,6 +11,14 @@ extension Float: BinaryEncodable {
     }
 }
 
+extension Float: BinaryDecodable {
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let data = try byteProvider.getNextBytes(Self.binaryDataSize).swapped
+        try self.init(hostIndependentBinaryData: data)
+    }
+}
+
 extension Float: HostIndependentRepresentable {
     
     public var hostIndependentRepresentation: CFSwappedFloat32 {
@@ -20,4 +28,6 @@ extension Float: HostIndependentRepresentable {
     public init(fromHostIndependentRepresentation value: CFSwappedFloat32) {
         self = CFConvertFloatSwappedToHost(value)
     }
+    
+    public static var empty: CFSwappedFloat32 { .init() }
 }

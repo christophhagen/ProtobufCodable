@@ -1,21 +1,26 @@
 import Foundation
 
-class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
+class KeyedEncoder<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
     
-    var encoder: Encoder
+    let encoder: Encoder
     
     init(encoder: Encoder, parent: TreeNode, key: CodingKey) {
         self.encoder = encoder
-        super.init(type: parent.wireType, field: key.intValue!, codingPath: parent.codingPath + [key])
+        super.init(type: parent.wireType,
+                   field: key.intValue!,
+                   userInfo: parent.userInfo,
+                   codingPath: parent.codingPath + [key])
     }
     
     init(encoder: Encoder, parent: TreeNode) {
         self.encoder = encoder
-        super.init(type: parent.wireType, field: parent.field, codingPath: parent.codingPath)
+        super.init(parent: parent)
     }
     
     func encodeNil(forKey key: Key) throws {
-        throw ProtobufEncodingError.notImplemented
+        // Nil values in single value containers are signaled by omitting the field from the message.
+        // The absence of a value is then treated as a nil value.
+        // This breaks when ommiting default values.
     }
     
     /**
@@ -26,13 +31,14 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
      - Parameter key: The key to associate the value with.
      */
     func encodePrimitive(_ primitive: BinaryEncodable, forField field: Int) throws {
-        guard !primitive.isDefaultValue else {
+        if primitive.isDefaultValue && omitDefaultValues {
             return
         }
         try addChild {
             DataNode(data: try primitive.binaryData(),
                      type: primitive.wireType,
                      field: field,
+                     userInfo: userInfo,
                      codingPath: codingPath)
         }
     }
@@ -45,7 +51,7 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
      */
     func encodeChild(_ value: Encodable, forKey key: CodingKey) throws {
         let child = addChild {
-            EncodingNode(parent: self, key: key)
+            EncodingNode(userInfo: encoder.userInfo, parent: self, key: key)
         }
         try value.encode(to: child)
     }
@@ -59,7 +65,7 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
      */
     func encodeDict(_ value: Encodable, forKey key: CodingKey) throws {
         let child = addChild {
-            DictNode(parent: self, key: key)
+            DictNode(userInfo: encoder.userInfo, parent: self, key: key)
         }
         try value.encode(to: child)
     }
@@ -91,7 +97,7 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
      */
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
         let child = addChild {
-            KeyedContainer<NestedKey>(encoder: encoder, parent: self, key: key)
+            KeyedEncoder<NestedKey>(encoder: encoder, parent: self, key: key)
         }
         return KeyedEncodingContainer(child)
     }
@@ -103,7 +109,7 @@ class KeyedContainer<Key: CodingKey>: TreeNode, KeyedEncodingContainerProtocol {
      */
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
         addChild {
-            UnkeyedContainer(encoder: encoder, parent: self, key: key)
+            UnkeyedEncoder(encoder: encoder, parent: self, key: key)
         }
     }
     

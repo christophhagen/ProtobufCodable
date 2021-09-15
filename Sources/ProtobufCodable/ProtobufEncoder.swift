@@ -1,38 +1,32 @@
 import Foundation
 
-enum ProtobufEncodingError: Error {
-    
-    case missingIntegerCodingKey(CodingKey)
-    
-    case notImplemented
-    
-    /**
-     A string value can't be represented using UTF-8 encoding.
-     */
-    case stringNotRepresentableInUTF8(_ failingString: String)
-}
-
 public struct ProtobufEncoder {
     
-    let encoder: EncodingNode
+    static let omitDefaultKey: CodingUserInfoKey = .init(rawValue: "omitDefaults")!
     
-    public init() {
-        self.encoder = EncodingNode()
+    /**
+     Prevent default values (like `zero`) from being written to binary data.
+     
+     Omitting defaults is default protobuf behaviour to reduce the binary size.
+     - Warning: If you specify `true` when encoding objects with optional values,
+     any default value will be decoded as `nil`.
+     */
+    var omitDefaultValues: Bool
+    
+    public init(omitDefaultValues: Bool = false) {
+        self.omitDefaultValues = omitDefaultValues
     }
     
     public func encode(_ value: Encodable) throws -> Data {
+        let encoder = TopLevelEncodingContainer(codingPath: [], userInfo: [:])
         try value.encode(to: encoder)
-        //encoder.printTree()
-        return encoder.getEncodedData()
+        return try encoder.getEncodedData()
     }
     
-    private func encode(_ data: Data) -> Data {
-        guard !data.isEmpty else {
-            return .empty
-        }
-        return data.count.variableLengthEncoding + data
+    public func encodeOld(_ value: Encodable) throws -> Data {
+        let userInfo: [CodingUserInfoKey : Any] = [ProtobufEncoder.omitDefaultKey : omitDefaultValues]
+        let encoder = EncodingNode(userInfo: userInfo)
+        try value.encode(to: encoder)
+        return encoder.getEncodedData()
     }
 }
-
-
-

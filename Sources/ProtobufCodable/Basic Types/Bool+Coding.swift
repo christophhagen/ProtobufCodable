@@ -19,3 +19,10 @@ extension Bool: BinaryEncodable {
         .varint
     }
 }
+
+extension Bool: BinaryDecodable {
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        self = try byteProvider.getNextByte() > 0
+    }
+}

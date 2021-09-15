@@ -41,8 +41,16 @@ public enum WireType: Int {
      
      Used for: groups (deprecated)
      */
-    @available(*, deprecated, message: "Deprecated wire type")
-    case endGroup = 4
+    //@available(*, deprecated, message: "Deprecated wire type")
+    //case endGroup = 4
+    
+    /**
+     Encodes a nil value.
+     
+     - Note: Abuses the deprecated `endGroup` wire type value `4`
+     - Warning: Incompatible with the official protocol buffer definition.
+     */
+    case nilValue = 4
     
     /**
      Fixed-length value of four bytes.
@@ -78,8 +86,10 @@ extension WireType: CustomStringConvertible {
             return "length"
         case .startGroup:
             return "startGroup"
-        case .endGroup:
-            return "endGroup"
+        // case .endGroup:
+        //     return "endGroup"
+        case .nilValue:
+            return "nil"
         case .length32:
             return "32bit"
         case .length8:
@@ -103,5 +113,15 @@ extension WireType {
     func tag(with field: Int) -> Data {
         let typeAndTag = (field << 3) | rawValue
         return typeAndTag.binaryData()
+    }
+    
+    /// Indicate if the wire type is compatible with the Google Protobuf definition.
+    var isProtobufCompatible: Bool {
+        switch self {
+        case .nilValue, .length8, .length16:
+            return false
+        default:
+            return true
+        }
     }
 }

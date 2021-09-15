@@ -8,13 +8,15 @@ import Foundation
  */
 class TreeNode: CustomStringConvertible {
     
-    var codingPath: [CodingKey]
+    public let userInfo: [CodingUserInfoKey : Any]
+    
+    let codingPath: [CodingKey]
     
     /// The wire type of the field encoded in this node
     var wireType: WireType?
     
     /// The field associated with the node
-    var field: Int?
+    let field: Int?
     
     /// The elements contained in this structure
     var children: [TreeNode]
@@ -23,6 +25,10 @@ class TreeNode: CustomStringConvertible {
     var needsEncodingWhenEmpty: Bool {
         true
     }
+    
+    private(set) lazy var omitDefaultValues: Bool = {
+        (userInfo[ProtobufEncoder.omitDefaultKey] as? Bool) ?? false
+    }()
     
     // MARK: Initialization
     
@@ -33,11 +39,12 @@ class TreeNode: CustomStringConvertible {
      - Parameter field: The field number of the enclosed object, if applicable
      - Parameter codingPath: The coding path leading to the node.
      */
-    init(type: WireType? = nil, field: Int? = nil, codingPath: [CodingKey]? = []) {
+    init(type: WireType? = nil, field: Int? = nil, userInfo: [CodingUserInfoKey : Any], codingPath: [CodingKey]? = []) {
         self.wireType = type
         self.field = field
         self.codingPath = codingPath ?? []
         self.children = []
+        self.userInfo = userInfo
     }
     
     /**
@@ -47,8 +54,12 @@ class TreeNode: CustomStringConvertible {
      - Note: Specify `nil` for the parent to create a root node.
      - Note: Wire type, field and coding path are automatically inherited from the parent node.
      */
-    convenience init(parent: TreeNode?) {
-        self.init(type: parent?.wireType, field: parent?.field, codingPath: parent?.codingPath)
+    init(parent: TreeNode?) {
+        self.wireType = parent?.wireType
+        self.field = parent?.field
+        self.codingPath = parent?.codingPath ?? []
+        self.children = []
+        self.userInfo = parent?.userInfo ?? [:]
     }
     
     // MARK: Encoding

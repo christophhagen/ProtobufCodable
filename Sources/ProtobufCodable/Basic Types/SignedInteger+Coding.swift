@@ -2,20 +2,24 @@ import Foundation
 
 // MARK: BinaryEncodable
 
-extension Int8: BinaryEncodable {
+extension Int8: BinaryCodable {
     
     public func binaryData() -> Data {
         UInt8(bitPattern: self).binaryData()
     }
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        self = Int8(bitPattern: try byteProvider.getNextByte())
+    }
 }
 
-extension Int16: BinaryEncodable { }
+extension Int16: BinaryCodable { }
 
-extension Int32: BinaryEncodable { }
+extension Int32: BinaryCodable { }
 
-extension Int64: BinaryEncodable { }
+extension Int64: BinaryCodable { }
 
-extension Int: BinaryEncodable { }
+extension Int: BinaryCodable { }
 
 // MARK: FixedLengthWireType
 
@@ -128,11 +132,61 @@ extension SignedInteger {
      The first bit in each byte is used to indicate that another byte will follow it.
      So values from 0 to 2^7 - 1 (i.e. 127) will be encoded in a single byte.
      In general, `n` bytes are needed to encode values from ` 2^(n-1) ` to ` 2^n - 1 `
-     The maximum encodable value ` 2^64 - 1 ` is encoded as 9 byte.
+     The maximum encodable value ` 2^64 - 1 ` is encoded as 10 byte.
      
-     - Returns: The value encoded as binary data (1 to 9 byte)
+     - Returns: The value encoded as binary data (1 to 10 byte)
      */
     var variableLengthEncoding: Data {
         UInt64(bitPattern: Int64(self)).variableLengthEncoding
+    }
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let value = try Int64.from(byteProvider)
+        guard let result = Self.init(exactly: value) else {
+            throw ProtobufDecodingError.variableLengthEncodedValueOutOfRange
+        }
+        self = result
+    }
+    
+    init(zigZagEncodedFrom byteProvider: DecodingDataProvider) throws {
+        let value = try Int64.zigZagEncoded(from: byteProvider)
+        guard let result = Self.init(exactly: value) else {
+            throw ProtobufDecodingError.variableLengthEncodedValueOutOfRange
+        }
+        self = result
+    }
+}
+
+extension Int64 {
+    
+    /**
+     Decode a 64 bit signed integer using variable-length encoding.
+     
+     Decodes an unsigned integer, where the last bit indicates the sign, and the absolute value is half of the decoded value
+     - Parameter byteProvider: A closure providing the next byte in the data.
+     - Throws: `BinaryDecodingError.unexpectedEndOfData`
+     - Returns: The decoded signed integer.
+     */
+    static func zigZagEncoded(from byteProvider: DecodingDataProvider) throws -> Int64 {
+        let result = try UInt64.from(byteProvider)
+        // Check the last bit to get sign
+        guard result & 1 > 0 else {
+            // Divide by two to get absolute value of positive values
+            return Int64(result >> 1)
+        }
+        // Divide by 2 and subtract one to get absolute value of negative values.
+        return -Int64(result >> 1) - 1
+    }
+    
+    /**
+     Decode a 64 bit signed integer using variable-length encoding.
+     
+     Decodes an unsigned integer, where the last bit indicates the sign, and the absolute value is half of the decoded value
+     - Parameter byteProvider: A closure providing the next byte in the data.
+     - Throws: `BinaryDecodingError.unexpectedEndOfData`
+     - Returns: The decoded signed integer.
+     */
+    static func from(_ byteProvider: DecodingDataProvider) throws -> Int64 {
+        Int64(bitPattern: try UInt64.from(byteProvider))
     }
 }

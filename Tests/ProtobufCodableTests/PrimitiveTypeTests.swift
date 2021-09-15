@@ -1,5 +1,5 @@
 import XCTest
-import ProtobufCodable
+@testable import ProtobufCodable
 import SwiftProtobuf
 
 final class PrimitiveTypeTests: XCTestCase {
@@ -7,7 +7,7 @@ final class PrimitiveTypeTests: XCTestCase {
     private func compare<T: Encodable>(_ value: T, leadingBytes: Int = 1, _ block: (inout PB_BasicMessage, T) -> Void) throws {
         let pbData = try PB_BasicMessage.with { block(&$0, value) }
             .serializedData().dropFirst(leadingBytes)
-        let codableData = try ProtobufEncoder().encode(value)
+        let codableData = try ProtobufEncoder(omitDefaultValues: true).encode(value)
         XCTAssertEqual(pbData.bytes, codableData.bytes)
         if pbData.bytes != codableData.bytes {
             print("PB: \(pbData.bytes)")
@@ -15,100 +15,113 @@ final class PrimitiveTypeTests: XCTestCase {
         }
     }
     
-    func testDouble() throws {
-        try compare(0) { $0.double = $1 }
-        try compare(3.14) { $0.double = $1 }
-        try compare(-3.14) { $0.double = $1 }
+    func roundTrip<T>(_ type: T.Type = T.self, _ value: T) throws where T: Codable, T: Equatable {
+        let data = try ProtobufEncoder().encode(value)
+        let decoded = try ProtobufDecoder().decode(T.self, from: data)
+        XCTAssertEqual(decoded, value)
+        if decoded != value {
+            print(value)
+            print(data.bytes)
+        }
+    }
+
+    private func roundTripCompare<T>(_ type: T.Type = T.self, _ values: T...) throws where T: Codable, T: Equatable {
+        try values.forEach { try roundTrip(type, $0) }
     }
     
-    func testFloat() throws {
-        try compare(0) { $0.float = $1 }
-        try compare(3.14) { $0.float = $1 }
-        try compare(-3.14) { $0.float = $1 }
+    private func roundTripCompare<T>(_ type: SignedValue<T>.Type = SignedValue<T>.self, _ values: T...) throws {
+        try values.forEach { try roundTrip(type, SignedValue<T>.init(wrappedValue: $0)) }
     }
     
-    func testInt32() throws {
-        try compare(0) { $0.int32 = $1 }
-        try compare(123) { $0.int32 = $1 }
-        try compare(-123) { $0.int32 = $1 }
+    private func roundTripCompare<T>(_ type: FixedLength<T>.Type = FixedLength<T>.self, _ values: T...) throws {
+        try values.forEach { try roundTrip(type, FixedLength<T>.init(wrappedValue: $0)) }
     }
     
-    func testInt64() throws {
-        try compare(0) { $0.int64 = $1 }
-        try compare(123) { $0.int64 = $1 }
-        try compare(-123) { $0.int64 = $1 }
+    func testUInt8() throws {
+        try roundTripCompare(UInt8.self, .zero, 123, 234, .max, .min)
+        try roundTripCompare(Optional<UInt8>.self, .zero, 123, 234, .max, .min, nil)
+    }
+    
+    func testInt8() throws {
+        try roundTripCompare(Int8.self, .zero, 123, -123, .max, .min)
+        try roundTripCompare(Optional<Int8>.self, .zero, 123, -123, .max, .min, nil)
+    }
+    
+    func testUInt16() throws {
+        try roundTripCompare(UInt16.self, .zero, 12345, 23456, .max, .min)
+        try roundTripCompare(Optional<UInt16>.self, .zero, 12345, 23456, .max, .min, nil)
+    }
+    
+    func testInt16() throws {
+        try roundTripCompare(Int16.self, .zero, 12345, -12345, .max, .min)
+        try roundTripCompare(Optional<Int16>.self, .zero, 12345, -12345, .max, .min, nil)
     }
     
     func testUInt32() throws {
-        try compare(0) { $0.unsignedInt32 = $1 }
-        try compare(123) { $0.unsignedInt32 = $1 }
-        try compare(1234567890) { $0.unsignedInt32 = $1 }
+        try roundTripCompare(UInt32.self, .zero, 1234567890, 2345678901, .max, .min)
+        try roundTripCompare(Optional<UInt32>.self, .zero, 1234567890, 2345678901, .max, .min, nil)
+    }
+    
+    func testInt32() throws {
+        try roundTripCompare(Int32.self, .zero, 1234567890, -1234567890, .max, .min)
+        try roundTripCompare(Optional<Int32>.self, .zero, 1234567890, -1234567890, .max, .min, nil)
     }
     
     func testUInt64() throws {
-        try compare(0) { $0.unsignedInt64 = $1 }
-        try compare(123) { $0.unsignedInt64 = $1 }
-        try compare(123456789012345) { $0.unsignedInt64 = $1 }
+        try roundTripCompare(UInt64.self, .zero, 12345678901234567890, 2345678901234567890, .max, .min)
+        try roundTripCompare(Optional<UInt64>.self, .zero, 12345678901234567890, 2345678901234567890, .max, .min, nil)
+    }
+    
+    func testInt64() throws {
+        try roundTripCompare(Int64.self, .zero, 1234567890123456789, -1234567890123456789, .max, .min)
+        try roundTripCompare(Optional<Int64>.self, .zero, 1234567890123456789, -1234567890123456789, .max, .min, nil)
+    }
+    
+    func testFloat() throws {
+        try roundTripCompare(Float.self, .infinity, .pi, .leastNonzeroMagnitude, .leastNormalMagnitude)
+        try roundTripCompare(Optional<Float>.self, .infinity, .pi, .leastNonzeroMagnitude, .leastNormalMagnitude, nil)
+    }
+    
+    func testDouble() throws {
+        try roundTripCompare(Double.self, .zero, .infinity, .pi, .leastNonzeroMagnitude, .leastNormalMagnitude)
+        try roundTripCompare(Optional<Double>.self, .zero, .infinity, .pi, .leastNonzeroMagnitude, .leastNormalMagnitude, nil)
     }
     
     func testSignedInt32() throws {
-        try compare(SignedValue<Int32>(wrappedValue: 0)) { $0.signedInt32 = $1.wrappedValue }
-        try compare(SignedValue<Int32>(wrappedValue: 123)) { $0.signedInt32 = $1.wrappedValue }
-        try compare(SignedValue<Int32>(wrappedValue: -123)) { $0.signedInt32 = $1.wrappedValue }
+        try roundTripCompare(SignedValue<Int32>.self, .zero, 123, -123, .min, .max)
     }
     
     func testSignedInt64() throws {
-        try compare(SignedValue<Int64>(wrappedValue: 0)) { $0.signedInt64 = $1.wrappedValue }
-        try compare(SignedValue<Int64>(wrappedValue: 123)) { $0.signedInt64 = $1.wrappedValue }
-        try compare(SignedValue<Int64>(wrappedValue: -123)) { $0.signedInt64 = $1.wrappedValue }
+        try roundTripCompare(SignedValue<Int32>.self, .zero, 123, -123, .min, .max)
     }
     
     func testFixedInt32() throws {
-        try compare(FixedLength<UInt32>(wrappedValue: 0)) { $0.fixedInt32 = $1.wrappedValue }
-        try compare(FixedLength<UInt32>(wrappedValue: 123)) { $0.fixedInt32 = $1.wrappedValue }
-        try compare(FixedLength<UInt32>(wrappedValue: 1234567890)) { $0.fixedInt32 = $1.wrappedValue }
+        try roundTripCompare(FixedLength<UInt32>.self, .zero, 123, .min, .max)
     }
     
     func testFixedInt64() throws {
-        try compare(FixedLength<UInt64>(wrappedValue: 0)) { $0.fixedInt64 = $1.wrappedValue }
-        try compare(FixedLength<UInt64>(wrappedValue: 123)) { $0.fixedInt64 = $1.wrappedValue }
-        try compare(FixedLength<UInt64>(wrappedValue: 123456789012345)) { $0.fixedInt64 = $1.wrappedValue }
+        try roundTripCompare(FixedLength<UInt64>.self, .zero, 123, .min, .max)
     }
     
     func testSignedFixedInt32() throws {
-        try compare(FixedLength<Int32>(wrappedValue: 0)) {
-            $0.signedFixedInt32 = $1.wrappedValue
-        }
-        try compare(FixedLength<Int32>(wrappedValue: 123)) {
-            $0.signedFixedInt32 = $1.wrappedValue
-        }
-        try compare(FixedLength<Int32>(wrappedValue: -1234567890)) {
-            $0.signedFixedInt32 = $1.wrappedValue
-        }
+        try roundTripCompare(FixedLength<Int32>.self, .zero, 123, -123, .min, .max)
     }
     
     func testSignedFixedInt64() throws {
-        try compare(FixedLength<Int64>(wrappedValue: 0)) {
-            $0.signedFixedInt64 = $1.wrappedValue
-        }
-        try compare(FixedLength<Int64>(wrappedValue: 123)) {
-            $0.signedFixedInt64 = $1.wrappedValue
-        }
-        try compare(FixedLength<Int64>(wrappedValue: -123456789012345)) {
-            $0.signedFixedInt64 = $1.wrappedValue
-        }
+        try roundTripCompare(FixedLength<Int64>.self, .zero, 123, -123, .min, .max)
     }
     
     func testBoolean() throws {
-        try compare(true) { $0.boolean = $1 }
-        try compare(false) { $0.boolean = $1 }
+        try roundTripCompare(Bool.self, false, true)
+        try roundTripCompare(Optional<Bool>.self, false, true, nil)
     }
     
-    // Note: String and bytes have wire type 2,
-    // and contain additional bytes after the tag
+    // Note: String and bytes have wire type 2 (lengthDelimited),
+    // and contain additional bytes for the length after the tag
     func testString() throws {
-        try compare("", leadingBytes: 2) { $0.string = $1 }
-        try compare("SomeText", leadingBytes: 2) { $0.string = $1 }
+        print("Some".data(using: .utf8)!.bytes)
+        try roundTripCompare(String.self, "Some", .empty, "A longer string")
+        try roundTripCompare(Optional<String>.self, "Some", .empty, "A longer string", nil)
     }
     
     func testBytes() throws {

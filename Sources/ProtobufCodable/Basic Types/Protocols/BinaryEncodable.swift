@@ -3,7 +3,7 @@ import Foundation
 /**
  A protocol adopted by all types which can be converted to binary data.
  */
-public protocol BinaryEncodable: WireTypeProvider, Codable {
+public protocol BinaryEncodable: WireTypeProvider, Encodable {
     
     /**
      Encode the value to binary data compatible with the protobuf encoding.

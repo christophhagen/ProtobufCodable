@@ -1,5 +1,5 @@
 import XCTest
-import ProtobufCodable
+@testable import ProtobufCodable
 import SwiftProtobuf
 
 final class ByteOrderTests: XCTestCase {
@@ -8,10 +8,18 @@ final class ByteOrderTests: XCTestCase {
         let converted = value.hostIndependentRepresentation
         let reversed = T(fromHostIndependentRepresentation: converted)
         XCTAssertEqual(value, reversed)
+        
+        let data = value.hostIndependentBinaryData
+        do {
+            let decoded = try T.init(hostIndependentBinaryData: data)
+            XCTAssertEqual(value, decoded)
+        } catch {
+            XCTFail("\(error)")
+        }
     }
     
     private func roundTripCompare<T>(_ type: T.Type = T.self, _ values: T...) where T: HostIndependentRepresentable, T: Equatable {
-        values.forEach{ roundTripCompare(type, $0) }
+        values.forEach { roundTripCompare(type, $0) }
     }
     
     func testUInt8() {

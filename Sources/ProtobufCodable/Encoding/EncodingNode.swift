@@ -2,18 +2,19 @@ import Foundation
 
 class EncodingNode: TreeNode, Encoder {
     
-    public var userInfo: [CodingUserInfoKey : Any]
-    
-    init(parent: TreeNode, key: CodingKey) {
-        self.userInfo = [:]
-        super.init(type: parent.wireType, field: key.intValue!, codingPath: parent.codingPath + [key])
+    init(userInfo: [CodingUserInfoKey : Any], parent: TreeNode, key: CodingKey) {
+        super.init(type: parent.wireType, field: key.intValue!, userInfo: userInfo, codingPath: parent.codingPath + [key])
     }
     
-    public init(parent: TreeNode? = nil) {
-        self.userInfo = [:]
-        super.init(type: parent?.wireType, field: parent?.field, codingPath: parent?.codingPath)
+    init(userInfo: [CodingUserInfoKey : Any]) {
+        super.init(userInfo: userInfo)
+    }
+    
+    init(parent: TreeNode) {
+        super.init(parent: parent)
     }
 
+    #warning("Only allow a single child for an abstract encoding node")
     override func getEncodedData() -> Data {
         children.map { $0.getEncodedData() }.reduce(Data(), +)
     }
@@ -25,7 +26,7 @@ class EncodingNode: TreeNode, Encoder {
             wireType = .lengthDelimited
         }
         let child = addChild {
-            KeyedContainer<Key>(encoder: self, parent: self)
+            KeyedEncoder<Key>(encoder: self, parent: self)
         }
         return KeyedEncodingContainer(child)
     }
@@ -35,14 +36,14 @@ class EncodingNode: TreeNode, Encoder {
             wireType = .lengthDelimited
         }
         let child = addChild {
-            UnkeyedContainer(encoder: self, parent: self)
+            UnkeyedEncoder(encoder: self, parent: self)
         }
         return child
     }
     
     public func singleValueContainer() -> SingleValueEncodingContainer {
         addChild {
-            ValueContainer(parent: self)
+            ValueEncoder(parent: self)
         }
     }
     

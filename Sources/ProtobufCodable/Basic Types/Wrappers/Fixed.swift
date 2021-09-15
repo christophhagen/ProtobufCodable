@@ -13,22 +13,26 @@ import Foundation
  ```
  */
 @propertyWrapper
-public struct FixedLength<T>: BinaryEncodable, Codable where T: FixedWidthInteger, T: BinaryEncodable, T: FixedLengthWireType, T: HostIndependentRepresentable {
+public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
+    WrappedValue: FixedWidthInteger,
+    WrappedValue: BinaryCodable,
+    WrappedValue: FixedLengthWireType,
+    WrappedValue: HostIndependentRepresentable {
     
     // MARK: Property wrapper
     
     /// The value wrapped in the fixed-width container
-    public var wrappedValue: T
+    public var wrappedValue: WrappedValue
     
     /**
      Wrap an integer value in a fixed-width container
      - Parameter wrappedValue: The integer to wrap
      */
-    public init(wrappedValue: T) {
+    public init(wrappedValue: WrappedValue) {
         self.wrappedValue = wrappedValue
     }
     
-    // MARK: BinaryPrimitiveEncodable
+    // MARK: BinaryEncodable
     
     /// The wrapped value is equal to the default value for the type.
     public var isDefaultValue: Bool {
@@ -43,9 +47,18 @@ public struct FixedLength<T>: BinaryEncodable, Codable where T: FixedWidthIntege
         wrappedValue.hostIndependentBinaryData
     }
     
+    // MARK: WireTypeProvider
+    
     /// The wire type of the wrapped value.
     public var wireType: WireType {
         wrappedValue.fixedLengthWireType
+    }
+    
+    // MARK: BinaryDecodable
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let wrappedValue = try WrappedValue(binaryData: byteProvider)
+        self.init(wrappedValue: wrappedValue)
     }
     
     // MARK: Codable
@@ -67,6 +80,6 @@ public struct FixedLength<T>: BinaryEncodable, Codable where T: FixedWidthIntege
      */
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.init(wrappedValue: try container.decode(T.self))
+        self = try container.decode(Self.self)
     }
 }

@@ -1,20 +1,22 @@
 import Foundation
 
-final class ValueContainer: TreeNode, SingleValueEncodingContainer {
+final class ValueEncoder: TreeNode, SingleValueEncodingContainer {
 
     func encodeNil() throws {
-        throw ProtobufEncodingError.notImplemented
+        // Nil values in single value containers are signaled by omitting the field from the message.
+        // The absence of a value is then treated as a nil value.
+        // This breaks when ommiting default values.
     }
     
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        guard !primitive.isDefaultValue else {
+        if primitive.isDefaultValue && omitDefaultValues {
             return
         }
         
         // Note: Default values are encoded in repeated fields
         try addChild {
             DataNode(data: try primitive.binaryData(),
-                     type: primitive.wireType,
+                     userInfo: userInfo,
                      codingPath: codingPath)
         }
     }

@@ -13,22 +13,24 @@ import Foundation
  }
  */
 @propertyWrapper
-public struct SignedValue<T>: BinaryEncodable where T: BinaryEncodable, T: SignedInteger {
+public struct SignedValue<WrappedValue>: BinaryCodable, Equatable where
+    WrappedValue: BinaryCodable,
+    WrappedValue: SignedInteger {
     
     // MARK: Property wrapper
     
     /// The value wrapped in the container
-    public var wrappedValue: T
+    public var wrappedValue: WrappedValue
     
     /**
      Wrap a signed integer value in a container
      - Parameter wrappedValue: The integer to wrap
      */
-    public init(wrappedValue: T) {
+    public init(wrappedValue: WrappedValue) {
         self.wrappedValue = wrappedValue
     }
     
-    // MARK: BinaryPrimitiveEncodable
+    // MARK: BinaryEncodable
     
     /// The wrapped value is equal to the default value for the type.
     public var isDefaultValue: Bool {
@@ -46,6 +48,13 @@ public struct SignedValue<T>: BinaryEncodable where T: BinaryEncodable, T: Signe
     /// The wire type of the wrapped value.
     public var wireType: WireType {
         wrappedValue.wireType
+    }
+    
+    // MARK: BinaryDecodable
+    
+    public init(from byteProvider: DecodingDataProvider) throws {
+        let wrappedValue = try WrappedValue(zigZagEncodedFrom: byteProvider)
+        self.init(wrappedValue: wrappedValue)
     }
     
     // MARK: Codable
@@ -67,6 +76,6 @@ public struct SignedValue<T>: BinaryEncodable where T: BinaryEncodable, T: Signe
      */
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.init(wrappedValue: try container.decode(T.self))
+        self = try container.decode(Self.self)
     }
 }

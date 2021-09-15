@@ -30,7 +30,7 @@ final class DictNode: EncodingNode {
     
     public override func singleValueContainer() -> SingleValueEncodingContainer {
         addChild {
-            ValueContainer(parent: self)
+            ValueEncoder(parent: self)
         }
     }
     
