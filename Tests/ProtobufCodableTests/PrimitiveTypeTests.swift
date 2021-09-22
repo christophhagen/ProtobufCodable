@@ -111,11 +111,21 @@ final class PrimitiveTypeTests: XCTestCase {
     // Note: String and bytes have wire type 2 (lengthDelimited),
     // and contain additional bytes for the length after the tag
     func testString() throws {
+        // [4, 83, 111, 109, 101]
+        // [0]
+        // [15, 65, 32, 108, 111, 110, 103, 101, 114, 32, 115, 116, 114, 105, 110, 103]
         try roundTripCompare(String.self, "Some", .empty, "A longer string")
+        // [4, 83, 111, 109, 101]
+        // [0]
+        // [15, 65, 32, 108, 111, 110, 103, 101, 114, 32, 115, 116, 114, 105, 110, 103]
+        // []
         try roundTripCompare(Optional<String>.self, "Some", .empty, "A longer string", nil)
     }
     
     func testBytes() throws {
+        // []
+        // [0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
+        // [0, 42, ... 42]
         try roundTripCompare(Data.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234))
         try roundTripCompare(Optional<Data>.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234), nil)
     }
@@ -139,40 +149,96 @@ final class PrimitiveTypeTests: XCTestCase {
     }
 
     func testArraysWithOptionals() throws {
+        // [2, 1, 3, 0, 255]
         try roundTripCompare([Optional<UInt8>].self, [.zero, nil, .max, nil])
+
+        // [3, 1, 2, 4, 0, 255]
         try roundTripCompare([Optional<UInt8>].self, [.zero, nil, nil, .max, nil])
+
+        // [3, 1, 3, 4, 0, 255]
         try roundTripCompare([Optional<UInt8>].self, [.zero, nil, .max, nil, nil])
 
-        try roundTripCompare([Optional<UInt8>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<UInt16>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<UInt32>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<UInt64>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<UInt>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<Int8>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<Int16>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<Int32>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<Int64>].self, [.zero,.min, .max, nil])
-        try roundTripCompare([Optional<Int>].self, [.zero,.min, .max, nil])
+        // [1, 3, 0, 0, 255]
+        try roundTripCompare([Optional<UInt8>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 0, 255, 255, 3]
+        try roundTripCompare([Optional<UInt16>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 0, 255, 255, 255, 255, 15]
+        try roundTripCompare([Optional<UInt32>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]
+        try roundTripCompare([Optional<UInt64>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]
+        try roundTripCompare([Optional<UInt>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 128, 127]
+        try roundTripCompare([Optional<Int8>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 128, 128, 254, 255, 255, 255, 255, 255, 255, 1, 255, 255, 1]
+        try roundTripCompare([Optional<Int16>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 128, 128, 128, 128, 248, 255, 255, 255, 255, 1, 255, 255, 255, 255, 7]
+        try roundTripCompare([Optional<Int32>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 1, 255, 255, 255, 255, 255, 255, 255, 255, 127]
+        try roundTripCompare([Optional<Int64>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 1, 255, 255, 255, 255, 255, 255, 255, 255, 127]
+        try roundTripCompare([Optional<Int>].self, [.zero, .min, .max, nil])
+
+        // [1, 3, 0, 0, 0, 0, 255, 255, 127, 127, 218, 15, 73, 64]
         try roundTripCompare([Optional<Float>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
+
+        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 239, 127, 24, 45, 68, 84, 251, 33, 9, 64]
         try roundTripCompare([Optional<Double>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
+
+        // [1, 3, 0, 1, 0]
         try roundTripCompare([Optional<Bool>].self, [false, true, false, nil])
+
+        // [1, 3, 4, 83, 111, 109, 101, 4, 77, 111, 114, 101, 0]
         try roundTripCompare([Optional<String>].self, ["Some", "More", "", nil])
+
+        // [1, 2, 0, 12, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
         try roundTripCompare([Optional<Data>].self, [.empty, Data(repeating: 42, count: 12), nil])
 
+        // [1, 3, 0, 255, 255, 255, 255, 15, 254, 255, 255, 255, 15]
         try roundTripCompare([Optional<SignedValue<Int32>>].self, [.zero ,.min, .max, nil])
+
+        // [1, 3, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1, 254, 255, 255, 255, 255, 255, 255, 255, 255, 1]
         try roundTripCompare([Optional<SignedValue<Int64>>].self, [.zero ,.min, .max, nil])
+
+        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 127]
         try roundTripCompare([Optional<FixedLength<Int32>>].self, [.zero ,.min, .max, nil])
+
+        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 255, 255, 255, 255, 127]
         try roundTripCompare([Optional<FixedLength<Int64>>].self, [.zero ,.min, .max, nil])
+
+        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255]
         try roundTripCompare([Optional<FixedLength<UInt32>>].self, [.zero ,.min, .max, nil])
+
+        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255]
         try roundTripCompare([Optional<FixedLength<UInt64>>].self, [.zero ,.min, .max, nil])
     }
 
     func testDictionaries() throws {
+        // [8, 8, 0, 18, 4, 122, 101, 114, 111]
         try roundTripCompare([Int : String].self, [.zero : "zero"])
+
+        // [8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCompare([Int : String].self, [.zero : "zero", 123 : "123"])
+
+        // [8, 10, 4, 122, 101, 114, 111, 16, 0, 4, 8, 123, 16, 123]
         try roundTripCompare([String : Int].self, ["zero" : .zero, "123" : 123])
+
+        // [8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCompare([Int32 : String].self, [.zero : "zero", 123 : "123"])
+
+        // [6, 12, 18, 3, 110, 105, 108, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCompare([Int32? : String].self, [.zero : "zero", 123 : "123", nil : "nil"])
+
+        // [2, 12, 20, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCompare([Int32? : String?].self, [.zero : "zero", 123 : "123", nil : nil])
 
     }
