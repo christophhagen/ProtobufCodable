@@ -21,11 +21,11 @@ public struct ProtobufEncoder {
         if value is Dictionary<AnyHashable, Any> {
             let encoder = DictionaryEncodingNode(codingPath: [], userInfo: [:])
             try value.encode(to: encoder)
-            return try encoder.getEncodedData()
+            return try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
         } else {
             let encoder = TopLevelEncodingContainer(codingPath: [], userInfo: [:])
             try value.encode(to: encoder)
-            return try encoder.getEncodedData()
+            return try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
         }
     }
 }

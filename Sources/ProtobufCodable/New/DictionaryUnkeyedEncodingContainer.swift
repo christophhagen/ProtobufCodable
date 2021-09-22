@@ -11,13 +11,13 @@ final class DictionaryUnkeyedEncodingContainer: UnkeyedEncodingContainer {
 
     private(set) var count: Int = 0
 
-    private var keyData: Data?
+    private var keyData: EncodedDataWrapper?
 
     private var isEncodingKeyNext: Bool {
         keyData == nil
     }
 
-    private var objects = [Data]()
+    private var objects = [EncodedDataWrapper]()
 
     init(codingPath: [CodingKey]) {
         self.codingPath = codingPath
@@ -27,25 +27,17 @@ final class DictionaryUnkeyedEncodingContainer: UnkeyedEncodingContainer {
         fatalError()
     }
 
-    private func encode<T>(_ value: T, forKey key: DictCodingKey) throws -> Data where T: Encodable {
+    private func encode<T>(_ value: T, forKey key: DictCodingKey) throws -> EncodedDataWrapper where T: Encodable {
         switch value {
         case let primitive as BinaryEncodable:
-            let data = try primitive.binaryDataIncludingLengthIfNeeded()
-            let tag = primitive.wireType.tag(with: key.rawValue)
-            return tag + data
-        case let optional as AnyOptional where optional.isNil:
-            return WireType.nilValue.tag(with: key.rawValue)
+            return try primitive.encoded(withKey: key)
+        case let optionalValue as AnyOptional where optionalValue.isNil:
+            return .init(.empty, wireType: .nilValue, key: key)
         default:
             let encoder = TopLevelEncodingContainer(codingPath: codingPath + [key], userInfo: [:])
             try value.encode(to: encoder)
-            let data = try encoder.getEncodedData()
-            let tag: Data
-            if let field = key.intValue {
-                tag = WireType.lengthDelimited.tag(with: field)
-            } else {
-                fatalError()
-            }
-            return tag + data.count.binaryData() + data
+            let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+            return .init(data, key: key)
         }
     }
 
@@ -55,9 +47,9 @@ final class DictionaryUnkeyedEncodingContainer: UnkeyedEncodingContainer {
             return
         }
         let valueData = try encode(value, forKey: .value)
-        let data = keyData + valueData
-        let length = data.count.variableLengthEncoding
-        self.objects.append(length + data)
+        let data = keyData.encoded() + valueData.encoded()
+        let wrapper = EncodedDataWrapper(data)
+        self.objects.append(wrapper)
         self.keyData = nil
         count += 1
     }
@@ -79,11 +71,7 @@ final class DictionaryUnkeyedEncodingContainer: UnkeyedEncodingContainer {
 
 extension DictionaryUnkeyedEncodingContainer: EncodedDataProvider {
 
-    func getEncodedData() throws -> Data {
-        self.objects.reduce(.empty, +)
-    }
-
-    func encodedObjects() throws -> [Data] {
+    func encodedObjects() throws -> [EncodedDataWrapper] {
         self.objects
     }
 }

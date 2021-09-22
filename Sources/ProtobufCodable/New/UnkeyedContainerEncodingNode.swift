@@ -8,7 +8,7 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
 
     private var nilIncides = Set<Int>()
 
-    private var encodedChildren = [Data]()
+    private var objects = [EncodedDataWrapper]()
 
     init(codingPath: [CodingKey]) {
         self.codingPath = codingPath
@@ -17,9 +17,6 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
     // MARK: Encoding values
 
     var nilEncodingData: Data {
-//        guard !nilIncides.isEmpty else {
-//            return .empty
-//        }
         let countData = nilIncides.count.variableLengthEncoding
         let valueData = nilIncides.sorted().map { $0.variableLengthEncoding }.reduce(.empty, +)
         return countData + valueData
@@ -42,15 +39,14 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
     }
 
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        let data = try primitive.binaryDataIncludingLengthIfNeeded()
-        encodedChildren.append(data)
+        objects.append(try primitive.encoded())
     }
 
     private func encodeChild(_ child: Encodable) throws {
         let encoder = TopLevelEncodingContainer(codingPath: codingPath, userInfo: [:])
         try child.encode(to: encoder)
-        let data = try encoder.getEncodedData()
-        encodedChildren.append(data)
+        let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: false)
+        objects.append(.init(data))
     }
 
     // MARK: Children
@@ -72,16 +68,8 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
 
 extension UnkeyedContainerEncodingNode: EncodedDataProvider {
 
-    func getEncodedData() throws -> Data {
-        let data = encodedChildren.reduce(.empty, +)
-        if data.isEmpty && nilIncides.isEmpty {
-            return .empty
-        }
-        return nilEncodingData + data
-    }
-
-    func encodedObjects() throws -> [Data] {
-        encodedChildren
+    func encodedObjects() throws -> [EncodedDataWrapper] {
+        objects
     }
 
     func encodedDataToPrepend() throws -> Data {

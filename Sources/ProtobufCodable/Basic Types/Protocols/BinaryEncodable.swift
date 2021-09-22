@@ -20,7 +20,7 @@ public protocol BinaryEncodable: WireTypeProvider, Encodable {
 }
 
 extension BinaryEncodable where Self: BinaryDecodable, Self: Equatable {
-
+    
     /// The value is equal to the default protobuf value `false`
     public var isDefaultValue: Bool {
         self == Self.defaultValue
@@ -28,12 +28,10 @@ extension BinaryEncodable where Self: BinaryDecodable, Self: Equatable {
 }
 
 extension BinaryEncodable {
-
-    func binaryDataIncludingLengthIfNeeded() throws -> Data {
-        let data = try binaryData()
-        if wireType == .lengthDelimited {
-            return data.count.variableLengthEncoding + data
-        }
-        return data
+    
+    func encoded(withKey key: CodingKey? = nil) throws -> EncodedDataWrapper {
+        .init(try binaryData(),
+              wireType: wireType,
+              key: key)
     }
 }

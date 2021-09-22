@@ -4,12 +4,12 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
     
     let codingPath: [CodingKey]
     
-    var data: Data?
+    var object: EncodedDataWrapper?
     
     private var encodedTypeInfo: String?
 
     var encodesNil: Bool {
-        data == nil
+        object == nil
     }
     
     init(codingPath: [CodingKey]) {
@@ -17,7 +17,7 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
     }
     
     func encodeNil() throws {
-        self.data = nil
+        self.object = nil
         self.encodedTypeInfo = "nil"
     }
     
@@ -27,15 +27,7 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
 //            self.data = .empty
 //            return
 //        }
-//        let data = try primitive.binaryData()
-//        if primitive.wireType == .lengthDelimited {
-//            // Prepend the length for primitive types like `String` and `Data`
-//            self.data = data.count.variableLengthEncoding + data
-//        } else {
-//            self.data = data
-//        }
-        //self.data = try primitive.binaryData()
-        self.data = try primitive.binaryDataIncludingLengthIfNeeded()
+        self.object = try primitive.encoded()
         self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
     }
     
@@ -51,16 +43,12 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
 }
 
 extension SingleValueEncodingNode: EncodedDataProvider {
-    
-    func getEncodedData() throws -> Data {
-        data ?? .empty
-    }
 
-    func encodedObjects() throws -> [Data] {
-        guard let d = data else {
+    func encodedObjects() throws -> [EncodedDataWrapper] {
+        guard let object = object else {
             return []
         }
-        return [d]
+        return [object]
     }
 }
 

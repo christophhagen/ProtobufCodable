@@ -4,7 +4,7 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
 
     let codingPath: [CodingKey]
 
-    private var encodedChildren = [Data]()
+    private var objects = [EncodedDataWrapper]()
 
     init(codingPath: [CodingKey]) {
         self.codingPath = codingPath
@@ -35,9 +35,9 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
     private func encode(keyPair: Encodable) throws {
         let encoder = TopLevelEncodingContainer(codingPath: codingPath, userInfo: [:])
         try keyPair.encode(to: encoder)
-        let data = try encoder.getEncodedData()
-        let length = data.count.variableLengthEncoding
-        encodedChildren.append(length + data)
+        let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+        let wrapper = EncodedDataWrapper(data)
+        objects.append(wrapper)
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -61,11 +61,7 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
 
 extension DictionaryKeyedEncodingContainer: EncodedDataProvider {
 
-    func getEncodedData() throws -> Data {
-        encodedChildren.reduce(.empty, +)
-    }
-
-    func encodedObjects() throws -> [Data] {
-        encodedChildren
+    func encodedObjects() throws -> [EncodedDataWrapper] {
+        objects
     }
 }

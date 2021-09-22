@@ -6,23 +6,27 @@ final class DictionaryEncodingNode: Encoder {
 
     let userInfo: [CodingUserInfoKey : Any]
 
-    private var wrappedContainer: EncodedDataProvider?
+    private var object: EncodedDataProvider?
 
     init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
         self.codingPath = codingPath
         self.userInfo = userInfo
     }
 
+    @discardableResult
+    func set<T: EncodedDataProvider>(object: T) -> T {
+        self.object = object
+        return object
+    }
+
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let container = DictionaryKeyedEncodingContainer<Key>(codingPath: codingPath)
-        self.wrappedContainer = container
-        return KeyedEncodingContainer(container)
+        let object = DictionaryKeyedEncodingContainer<Key>(codingPath: codingPath)
+        set(object: object)
+        return KeyedEncodingContainer(object)
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = DictionaryUnkeyedEncodingContainer(codingPath: codingPath)
-        self.wrappedContainer = container
-        return container
+        set(object: DictionaryUnkeyedEncodingContainer(codingPath: codingPath))
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
@@ -34,14 +38,11 @@ final class DictionaryEncodingNode: Encoder {
 
 extension DictionaryEncodingNode: EncodedDataProvider {
 
-    func getEncodedData() throws -> Data {
-        guard let data = try wrappedContainer?.getEncodedData() else {
-            fatalError()
-        }
-        return data
+    func encodedObjects() throws -> [EncodedDataWrapper] {
+        try object?.encodedObjects() ?? []
     }
 
-    func encodedObjects() throws -> [Data] {
-        try wrappedContainer?.encodedObjects() ?? []
+    func encodedDataToPrepend() throws -> Data {
+        try object?.encodedDataToPrepend() ?? .empty
     }
 }

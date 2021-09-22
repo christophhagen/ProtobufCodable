@@ -6,12 +6,12 @@ final class TopLevelEncodingContainer: Encoder {
     
     var userInfo: [CodingUserInfoKey : Any]
     
-    private var wrappedContainer: EncodedDataProvider?
+    private var object: EncodedDataProvider?
 
     @discardableResult
-    func setContainer<T: EncodedDataProvider>(_ container: T) -> T {
-        self.wrappedContainer = container
-        return container
+    func set<T: EncodedDataProvider>(object: T) -> T {
+        self.object = object
+        return object
     }
     
     init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
@@ -20,33 +20,28 @@ final class TopLevelEncodingContainer: Encoder {
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let container = KeyedContainerEncodingNode<Key>(codingPath: codingPath)
-        setContainer(container)
-        return KeyedEncodingContainer(container)
+        let object = KeyedContainerEncodingNode<Key>(codingPath: codingPath)
+        set(object: object)
+        return KeyedEncodingContainer(object)
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        setContainer(UnkeyedContainerEncodingNode(codingPath: codingPath))
+        set(object: UnkeyedContainerEncodingNode(codingPath: codingPath))
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        setContainer(SingleValueEncodingNode(codingPath: codingPath))
+        set(object: SingleValueEncodingNode(codingPath: codingPath))
     }
 }
 
 extension TopLevelEncodingContainer: EncodedDataProvider {
 
-    
-    func getEncodedData() throws -> Data {
-        try wrappedContainer?.getEncodedData() ?? .empty
-    }
-
-    func encodedObjects() throws -> [Data] {
-        try wrappedContainer?.encodedObjects() ?? []
+    func encodedObjects() throws -> [EncodedDataWrapper] {
+        try object?.encodedObjects() ?? []
     }
 
     func encodedDataToPrepend() throws -> Data {
-        try wrappedContainer?.encodedDataToPrepend() ?? .empty
+        try object?.encodedDataToPrepend() ?? .empty
     }
 
 }
