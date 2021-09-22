@@ -14,6 +14,11 @@ struct Nested: Codable {
 }
 
 extension Nested: ProtobufComparable {
+
+    init(protoObject: PB_NestedMessage.Nested) {
+        self.double = protoObject.double
+        self.uint = protoObject.uint
+    }
     
     var protobuf: PB_NestedMessage.Nested {
         .with {

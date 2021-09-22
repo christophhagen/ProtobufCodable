@@ -100,7 +100,7 @@ extension WireType: CustomStringConvertible {
     }
 }
 
-extension WireType {
+extension WireType: Decodable {
     
     /**
      Create a tag (field number + wire type).
@@ -108,11 +108,9 @@ extension WireType {
      Each key in the streamed message is a `varint` with the value `(field_number << 3) | wire_type` – in other words, the last three bits of the number store the wire type. The definition of the tag/key encoding is available in the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure) documentation.
      - Parameter field: The id of the field which is encoded with the wire type.
      - Returns: The encoded tag.
-     - Note:
      */
     func tag(with field: Int) -> Data {
-        let typeAndTag = (field << 3) | rawValue
-        return typeAndTag.binaryData()
+        Tag(type: self, field: field).data
     }
     
     /// Indicate if the wire type is compatible with the Google Protobuf definition.

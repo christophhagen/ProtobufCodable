@@ -1,10 +1,5 @@
 import Foundation
 
-protocol EncodedDataProvider {
-    
-    func getEncodedData() throws -> Data
-}
-
 final class TopLevelEncodingContainer: Encoder {
 
     var codingPath: [CodingKey]
@@ -12,7 +7,8 @@ final class TopLevelEncodingContainer: Encoder {
     var userInfo: [CodingUserInfoKey : Any]
     
     private var wrappedContainer: EncodedDataProvider?
-    
+
+    @discardableResult
     func setContainer<T: EncodedDataProvider>(_ container: T) -> T {
         self.wrappedContainer = container
         return container
@@ -24,11 +20,13 @@ final class TopLevelEncodingContainer: Encoder {
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        fatalError()
+        let container = KeyedContainerEncodingNode<Key>(codingPath: codingPath)
+        setContainer(container)
+        return KeyedEncodingContainer(container)
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
+        setContainer(UnkeyedContainerEncodingNode(codingPath: codingPath))
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
@@ -37,8 +35,18 @@ final class TopLevelEncodingContainer: Encoder {
 }
 
 extension TopLevelEncodingContainer: EncodedDataProvider {
+
     
     func getEncodedData() throws -> Data {
         try wrappedContainer?.getEncodedData() ?? .empty
     }
+
+    func encodedObjects() throws -> [Data] {
+        try wrappedContainer?.encodedObjects() ?? []
+    }
+
+    func encodedDataToPrepend() throws -> Data {
+        try wrappedContainer?.encodedDataToPrepend() ?? .empty
+    }
+
 }

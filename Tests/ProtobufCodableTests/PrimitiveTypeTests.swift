@@ -3,25 +3,17 @@ import XCTest
 import SwiftProtobuf
 
 final class PrimitiveTypeTests: XCTestCase {
-    
-    private func compare<T: Encodable>(_ value: T, leadingBytes: Int = 1, _ block: (inout PB_BasicMessage, T) -> Void) throws {
-        let pbData = try PB_BasicMessage.with { block(&$0, value) }
-            .serializedData().dropFirst(leadingBytes)
-        let codableData = try ProtobufEncoder(omitDefaultValues: true).encode(value)
-        XCTAssertEqual(pbData.bytes, codableData.bytes)
-        if pbData.bytes != codableData.bytes {
-            print("PB: \(pbData.bytes)")
-            print("CO: \(codableData.bytes)")
-        }
-    }
-    
+
     func roundTrip<T>(_ type: T.Type = T.self, _ value: T) throws where T: Codable, T: Equatable {
         let data = try ProtobufEncoder().encode(value)
+        print("Data: \(data.bytes)")
         let decoded = try ProtobufDecoder().decode(T.self, from: data)
         XCTAssertEqual(decoded, value)
         if decoded != value {
-            print(value)
-            print(data.bytes)
+            print("Type: \(Swift.type(of: value))")
+            print("Original: \(value)")
+            print("Decoded:  \(decoded)")
+            print("Data: \(data.bytes)")
         }
     }
 
@@ -119,14 +111,69 @@ final class PrimitiveTypeTests: XCTestCase {
     // Note: String and bytes have wire type 2 (lengthDelimited),
     // and contain additional bytes for the length after the tag
     func testString() throws {
-        print("Some".data(using: .utf8)!.bytes)
         try roundTripCompare(String.self, "Some", .empty, "A longer string")
         try roundTripCompare(Optional<String>.self, "Some", .empty, "A longer string", nil)
     }
     
     func testBytes() throws {
-        try compare(Data.empty, leadingBytes: 2) { $0.bytes = $1 }
-        try compare(Data(repeating: 42, count: 24), leadingBytes: 2) { $0.bytes = $1 }
-        try compare(Data(repeating: 42, count: 1234), leadingBytes: 3) { $0.bytes = $1 }
+        try roundTripCompare(Data.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234))
+        try roundTripCompare(Optional<Data>.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234), nil)
+    }
+
+    func testArrays() throws {
+        try roundTripCompare([UInt8].self, [.zero,.min, .max])
+        try roundTripCompare([UInt16].self, [.zero,.min, .max])
+        try roundTripCompare([UInt32].self, [.zero,.min, .max])
+        try roundTripCompare([UInt64].self, [.zero,.min, .max])
+        try roundTripCompare([UInt].self, [.zero,.min, .max])
+        try roundTripCompare([Int8].self, [.zero,.min, .max])
+        try roundTripCompare([Int16].self, [.zero,.min, .max])
+        try roundTripCompare([Int32].self, [.zero,.min, .max])
+        try roundTripCompare([Int64].self, [.zero,.min, .max])
+        try roundTripCompare([Int].self, [.zero,.min, .max])
+        try roundTripCompare([Float].self, [.zero, .greatestFiniteMagnitude, .pi])
+        try roundTripCompare([Double].self, [.zero, .greatestFiniteMagnitude, .pi])
+        try roundTripCompare([Bool].self, [false, true, false])
+        try roundTripCompare([String].self, ["Some", "More", ""])
+        try roundTripCompare([Data].self, [.empty, Data(repeating: 42, count: 12)])
+    }
+
+    func testArraysWithOptionals() throws {
+        try roundTripCompare([Optional<UInt8>].self, [.zero, nil, .max, nil])
+        try roundTripCompare([Optional<UInt8>].self, [.zero, nil, nil, .max, nil])
+        try roundTripCompare([Optional<UInt8>].self, [.zero, nil, .max, nil, nil])
+
+        try roundTripCompare([Optional<UInt8>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<UInt16>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<UInt32>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<UInt64>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<UInt>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Int8>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Int16>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Int32>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Int64>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Int>].self, [.zero,.min, .max, nil])
+        try roundTripCompare([Optional<Float>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
+        try roundTripCompare([Optional<Double>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
+        try roundTripCompare([Optional<Bool>].self, [false, true, false, nil])
+        try roundTripCompare([Optional<String>].self, ["Some", "More", "", nil])
+        try roundTripCompare([Optional<Data>].self, [.empty, Data(repeating: 42, count: 12), nil])
+
+        try roundTripCompare([Optional<SignedValue<Int32>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<SignedValue<Int64>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedLength<Int32>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedLength<Int64>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedLength<UInt32>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedLength<UInt64>>].self, [.zero ,.min, .max, nil])
+    }
+
+    func testDictionaries() throws {
+        try roundTripCompare([Int : String].self, [.zero : "zero"])
+        try roundTripCompare([Int : String].self, [.zero : "zero", 123 : "123"])
+        try roundTripCompare([String : Int].self, ["zero" : .zero, "123" : 123])
+        try roundTripCompare([Int32 : String].self, [.zero : "zero", 123 : "123"])
+        try roundTripCompare([Int32? : String].self, [.zero : "zero", 123 : "123", nil : "nil"])
+        try roundTripCompare([Int32? : String?].self, [.zero : "zero", 123 : "123", nil : nil])
+
     }
 }

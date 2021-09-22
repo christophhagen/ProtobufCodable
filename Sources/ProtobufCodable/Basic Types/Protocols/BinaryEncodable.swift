@@ -19,19 +19,21 @@ public protocol BinaryEncodable: WireTypeProvider, Encodable {
     var isDefaultValue: Bool { get }
 }
 
-public extension BinaryEncodable where Self: AdditiveArithmetic {
-    
-    /**
-     The value is equal to the default value for an integer (`zero`)
-     */
-    var isDefaultValue: Bool { self == .zero }
+extension BinaryEncodable where Self: BinaryDecodable, Self: Equatable {
+
+    /// The value is equal to the default protobuf value `false`
+    public var isDefaultValue: Bool {
+        self == Self.defaultValue
+    }
 }
 
-public extension BinaryEncodable where Self: Collection {
-    
-    /**
-     The value is equal to the default value for a collection (`[]`)
-     */
-    var isDefaultValue: Bool { isEmpty }
-}
+extension BinaryEncodable {
 
+    func binaryDataIncludingLengthIfNeeded() throws -> Data {
+        let data = try binaryData()
+        if wireType == .lengthDelimited {
+            return data.count.variableLengthEncoding + data
+        }
+        return data
+    }
+}

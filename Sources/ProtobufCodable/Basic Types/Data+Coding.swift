@@ -8,10 +8,11 @@ extension Data: BinaryEncodable {
      */
     public func binaryData() throws -> Data {
         self
+//        count.variableLengthEncoding + self
     }
     
     /// The wire type of binary data (length delimited)
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .lengthDelimited
     }
 }
@@ -19,7 +20,12 @@ extension Data: BinaryEncodable {
 extension Data: BinaryDecodable {
     
     public init(from byteProvider: DecodingDataProvider) throws {
-        #warning("Should we encode/decode the length for Data?")
         self = byteProvider.getRemainingBytes()
+//        let count = try Int(from: byteProvider)
+//        self = try byteProvider.getNextBytes(count)
+    }
+
+    public static var defaultValue: Data {
+        .empty
     }
 }

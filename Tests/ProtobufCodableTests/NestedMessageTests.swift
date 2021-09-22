@@ -18,13 +18,13 @@ final class NestedMessageTests: XCTestCase {
         let nested = Nested(double: -3.14, uint: 123567890)
         let nestedMessage = NestedMessage(basic: basic, nested: nested)
         
-        try compareBinaryWithoutDefaults(nestedMessage)
+        try roundTrip(nestedMessage)
     }
     
     func testEmptyNestedMessage() throws {
         let nestedMessage = NestedMessage(basic: BasicMessage(double: 3.14), nested: Nested())
         
-        try compareBinaryWithoutDefaults(nestedMessage)
+        try roundTrip(nestedMessage)
     }
     
     func testDeepNestedMessage() throws {
@@ -32,6 +32,6 @@ final class NestedMessageTests: XCTestCase {
         let nestedMessage = NestedMessage(basic: basic, nested: nested)
         let codableDeep = DeepNestedMessage(basic: basic, nested: nestedMessage)
         
-        try compareBinaryWithoutDefaults(codableDeep)
+        try roundTrip(codableDeep)
     }
 }

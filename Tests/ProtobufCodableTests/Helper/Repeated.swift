@@ -13,6 +13,11 @@ struct Repeated: Codable {
 }
 
 extension Repeated: ProtobufComparable {
+
+    init(protoObject: PB_Repeated) {
+        self.unsigneds = protoObject.unsigneds
+        self.messages = protoObject.messages.map(BasicMessage.init)
+    }
     
     var protobuf: PB_Repeated {
         .with {
@@ -22,3 +27,9 @@ extension Repeated: ProtobufComparable {
     }
 }
 
+extension Repeated: CustomStringConvertible {
+
+    var description: String {
+        "Repeated:\n  \(unsigneds)\n  \(messages)"
+    }
+}

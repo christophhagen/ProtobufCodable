@@ -12,11 +12,12 @@ extension String: BinaryEncodable {
         guard let data = data(using: .utf8) else {
             throw ProtobufEncodingError.stringNotRepresentableInUTF8(self)
         }
-        return data.count.variableLengthEncoding + data
+        return data
+        // return data.count.variableLengthEncoding + data
     }
     
     /// The wire type of a string (`lengthDelimited`)
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .lengthDelimited
     }
 }
@@ -24,11 +25,16 @@ extension String: BinaryEncodable {
 extension String: BinaryDecodable {
     
     public init(from byteProvider: DecodingDataProvider) throws {
-        let length = try Int(from: byteProvider)
-        let data = try byteProvider.getNextBytes(length)
+        //let length = try Int(from: byteProvider)
+        //let data = try byteProvider.getNextBytes(length)
+        let data = byteProvider.getRemainingBytes()
         guard let s = String(data: data, encoding: .utf8) else {
             throw ProtobufDecodingError.invalidString
         }
         self = s
+    }
+
+    public static var defaultValue: String {
+        .empty
     }
 }

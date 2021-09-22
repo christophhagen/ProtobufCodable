@@ -35,8 +35,8 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
     // MARK: BinaryEncodable
     
     /// The wrapped value is equal to the default value for the type.
-    public var isDefaultValue: Bool {
-        wrappedValue.isDefaultValue
+    public static var defaultValue: Self {
+        .init(wrappedValue: .defaultValue)
     }
     
     /**
@@ -50,8 +50,8 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
     // MARK: WireTypeProvider
     
     /// The wire type of the wrapped value.
-    public var wireType: WireType {
-        wrappedValue.fixedLengthWireType
+    public static var wireType: WireType {
+        WrappedValue.fixedLengthWireType
     }
     
     // MARK: BinaryDecodable
@@ -81,5 +81,39 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = try container.decode(Self.self)
+    }
+}
+
+extension FixedLength where WrappedValue: AdditiveArithmetic {
+
+    /**
+     The zero value.
+
+     Zero is the identity element for addition. For any value, `x + .zero == x` and `.zero + x == x`.
+
+     */
+    static var zero: Self {
+        .init(wrappedValue: .zero)
+    }
+}
+
+extension FixedLength where WrappedValue: FixedWidthInteger {
+
+    /// The maximum representable integer in this type.
+    ///
+    /// For unsigned integer types, this value is `(2 ** bitWidth) - 1`, where
+    /// `**` is exponentiation. For signed integer types, this value is
+    /// `(2 ** (bitWidth - 1)) - 1`.
+    static var max: Self {
+        .init(wrappedValue: .max)
+    }
+
+    /// The minimum representable integer in this type.
+    ///
+    /// For unsigned integer types, this value is always `0`. For signed integer
+    /// types, this value is `-(2 ** (bitWidth - 1))`, where `**` is
+    /// exponentiation.
+    static var min: Self {
+        .init(wrappedValue: .min)
     }
 }

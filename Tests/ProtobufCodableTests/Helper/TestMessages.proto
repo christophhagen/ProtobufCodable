@@ -70,4 +70,6 @@ message DictContainer {
     map<uint32, BasicMessage> uintDict = 2;
     
     map<int64, BasicMessage> intDict = 3;
+
+    map<int64, string> intStringDict = 4;
 }

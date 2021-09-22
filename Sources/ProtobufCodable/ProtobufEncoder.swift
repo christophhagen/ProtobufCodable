@@ -18,15 +18,14 @@ public struct ProtobufEncoder {
     }
     
     public func encode(_ value: Encodable) throws -> Data {
-        let encoder = TopLevelEncodingContainer(codingPath: [], userInfo: [:])
-        try value.encode(to: encoder)
-        return try encoder.getEncodedData()
-    }
-    
-    public func encodeOld(_ value: Encodable) throws -> Data {
-        let userInfo: [CodingUserInfoKey : Any] = [ProtobufEncoder.omitDefaultKey : omitDefaultValues]
-        let encoder = EncodingNode(userInfo: userInfo)
-        try value.encode(to: encoder)
-        return encoder.getEncodedData()
+        if value is Dictionary<AnyHashable, Any> {
+            let encoder = DictionaryEncodingNode(codingPath: [], userInfo: [:])
+            try value.encode(to: encoder)
+            return try encoder.getEncodedData()
+        } else {
+            let encoder = TopLevelEncodingContainer(codingPath: [], userInfo: [:])
+            try value.encode(to: encoder)
+            return try encoder.getEncodedData()
+        }
     }
 }

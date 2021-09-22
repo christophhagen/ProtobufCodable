@@ -11,11 +11,8 @@ extension Bool: BinaryEncodable {
         .init([self ? 1 : 0])
     }
     
-    /// The value is equal to the default protobuf value `false`
-    public var isDefaultValue: Bool { !self }
-    
     /// The wire type of booleans.
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .varint
     }
 }
@@ -24,5 +21,10 @@ extension Bool: BinaryDecodable {
     
     public init(from byteProvider: DecodingDataProvider) throws {
         self = try byteProvider.getNextByte() > 0
+    }
+
+    /// The default protobuf value `false`
+    public static var defaultValue: Bool {
+        false
     }
 }

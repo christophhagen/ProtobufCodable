@@ -7,7 +7,7 @@ extension Double: BinaryEncodable {
     }
     
     /// The wire type of a double (64 bit)
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .length64
     }
 }
@@ -19,7 +19,6 @@ extension Double: BinaryDecodable {
         try self.init(hostIndependentBinaryData: data)
     }
 }
-
 
 extension Double: HostIndependentRepresentable {
     

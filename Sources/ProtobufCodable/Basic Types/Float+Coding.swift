@@ -6,7 +6,7 @@ extension Float: BinaryEncodable {
         hostIndependentBinaryData.swapped
     }
     
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .length32
     }
 }

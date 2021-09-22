@@ -3,11 +3,31 @@ import ProtobufCodable
 import SwiftProtobuf
 
 final class BasicMessageTests: XCTestCase {
-    
-    private func roundTrip(_ block: (inout BasicMessage) -> Void) throws {
-        try compareBinaryWithoutDefaults(block)
+
+    func roundTripCompare<T>(type: T.Type = T.self, _ value: T) throws where T: Codable, T: Equatable {
+        let data = try ProtobufEncoder().encode(value)
+        let decoded = try ProtobufDecoder().decode(T.self, from: data)
+        XCTAssertEqual(decoded, value)
+        if decoded != value {
+            print(value)
+            print(data.bytes)
+        }
     }
-    
+
+    func roundTrip(_ block: (inout BasicMessage) -> Void) throws {
+        var message = BasicMessage()
+        block(&message)
+        let data = try message.protobuf.serializedData()
+        let decodedCodable: BasicMessage = try ProtobufDecoder().decode(from: data)
+        XCTAssertEqual(message, decodedCodable)
+        let data2 = try ProtobufEncoder().encode(message)
+        let decodedProtobuf = try BasicMessage.ProtobufType(serializedData: data2)
+        XCTAssertEqual(decodedProtobuf, message.protobuf)
+
+        let decoded: BasicMessage = try ProtobufDecoder().decode(from: data)
+        XCTAssertEqual(decoded, message)
+    }
+
     func testMessageWithDouble() throws {
         try roundTrip { $0.double = 3.14 }
         try roundTrip { $0.double = -3.14 }

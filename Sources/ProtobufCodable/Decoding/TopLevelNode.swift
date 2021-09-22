@@ -1,5 +1,6 @@
 import Foundation
 
+/*
 final class TopLevelNode: Decoder {
     
     var codingPath: [CodingKey]
@@ -32,27 +33,4 @@ final class TopLevelNode: Decoder {
 protocol WrappedContainer {
     
 }
-
-final class ByteProvider: DecodingDataProvider {
-    
-    private let data: Data
-    
-    private var processedBytes: Int = 0
-    
-    init(data: Data) {
-        self.data = data
-    }
-    
-    var remainingByteCount: Int {
-        data.count - processedBytes
-    }
-    
-    func getNextBytes(_ count: Int) throws -> Data {
-        guard count <= remainingByteCount else {
-            throw ProtobufDecodingError.missingData
-        }
-        let newCount = processedBytes + count
-        defer { processedBytes = newCount }
-        return Data(data[processedBytes..<newCount])
-    }
-}
+*/

@@ -2,21 +2,22 @@ import Foundation
 
 final class SingleValueEncodingNode: SingleValueEncodingContainer {
     
-    var codingPath: [CodingKey]
+    let codingPath: [CodingKey]
     
     var data: Data?
     
     private var encodedTypeInfo: String?
+
+    var encodesNil: Bool {
+        data == nil
+    }
     
     init(codingPath: [CodingKey]) {
         self.codingPath = codingPath
     }
     
     func encodeNil() throws {
-        guard data == nil else {
-            throw ProtobufEncodingError.multipleValuesEncodedInSingleValueContainer
-        }
-        self.data = .empty
+        self.data = nil
         self.encodedTypeInfo = "nil"
     }
     
@@ -33,20 +34,18 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
 //        } else {
 //            self.data = data
 //        }
-        self.data = try primitive.binaryData()
+        //self.data = try primitive.binaryData()
+        self.data = try primitive.binaryDataIncludingLengthIfNeeded()
         self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
     }
     
     func encode<T>(_ value: T) throws where T: Encodable {
-        guard data == nil else {
-            throw ProtobufEncodingError.multipleValuesEncodedInSingleValueContainer
-        }
         switch value {
         case let primitive as BinaryEncodable:
             try encodePrimitive(primitive)
         default:
             #warning("Encode complex types in SingleValueContainer")
-            throw ProtobufEncodingError.notImplemented
+            fatalError()
         }
     }
 }
@@ -55,6 +54,13 @@ extension SingleValueEncodingNode: EncodedDataProvider {
     
     func getEncodedData() throws -> Data {
         data ?? .empty
+    }
+
+    func encodedObjects() throws -> [Data] {
+        guard let d = data else {
+            return []
+        }
+        return [d]
     }
 }
 

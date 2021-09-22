@@ -23,6 +23,11 @@ struct DeepNestedMessage: Codable {
 }
 
 extension DeepNestedMessage: ProtobufComparable {
+
+    init(protoObject: PB_DeepNestedMessage) {
+        self.basic = .init(protoObject: protoObject.basic)
+        self.nested = .init(protoObject: protoObject.nested)
+    }
     
     var protobuf: PB_DeepNestedMessage {
         .with {

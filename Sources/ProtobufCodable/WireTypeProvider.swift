@@ -5,10 +5,24 @@ public protocol WireTypeProvider {
     /**
      The wire type used for encoding of the type.
      */
-    var wireType: WireType { get }
+    static var wireType: WireType { get }
+}
+
+extension WireTypeProvider {
+
+    var wireType: WireType {
+        Self.wireType
+    }
 }
 
 public protocol FixedLengthWireType: WireTypeProvider {
     
-    var fixedLengthWireType: WireType { get }
+    static var fixedLengthWireType: WireType { get }
+}
+
+extension FixedLengthWireType {
+
+    var fixedLengthWireType: WireType {
+        Self.fixedLengthWireType
+    }
 }

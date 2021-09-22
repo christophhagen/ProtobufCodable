@@ -23,6 +23,11 @@ struct NestedMessage: Codable {
 }
 
 extension NestedMessage: ProtobufComparable {
+
+    init(protoObject: PB_NestedMessage) {
+        self.basic = .init(protoObject: protoObject.basic)
+        self.nested = .init(protoObject: protoObject.nested)
+    }
     
     var protobuf: PB_NestedMessage {
         .with {

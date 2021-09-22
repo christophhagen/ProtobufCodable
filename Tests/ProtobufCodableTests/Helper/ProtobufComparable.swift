@@ -10,13 +10,15 @@ import SwiftProtobuf
 import ProtobufCodable
 import XCTest
 
-protocol ProtobufComparable: Codable {
+protocol ProtobufComparable: Codable, Equatable {
     
     associatedtype ProtobufType: SwiftProtobuf.Message, Equatable
     
     var protobuf: ProtobufType { get }
     
     init()
+
+    init(protoObject: ProtobufType)
 }
 
 extension ProtobufComparable {
@@ -30,7 +32,7 @@ extension ProtobufComparable {
         protobuf == object
     }
 }
-
+/*
 func roundTrip<T: ProtobufComparable>(_ original: T, omitDefaults: Bool = true, compareBinary: Bool = true) throws {
     let data = try ProtobufEncoder(omitDefaultValues: omitDefaults).encode(original)
     let decoded = try T.ProtobufType.init(serializedData: data)
@@ -73,4 +75,33 @@ func compareBinaryWithoutDefaults<T: ProtobufComparable>(_ block: (inout T) -> V
     var original = T()
     block(&original)
     try compareBinaryWithoutDefaults(original)
+}
+*/
+func roundTrip<T>(_ block: (inout T) -> Void) throws where T: ProtobufComparable {
+    var message = T()
+    block(&message)
+    let data = try message.protobuf.serializedData()
+    let data2 = try ProtobufEncoder().encode(message)
+    print("Proto: \(data.bytes)")
+    print("Data:  \(data2.bytes)")
+    let decodedCodable: T = try ProtobufDecoder().decode(from: data)
+    XCTAssertEqual(message, decodedCodable)
+    let decodedProtobuf = try T.ProtobufType(serializedData: data2)
+    XCTAssertEqual(decodedProtobuf, message.protobuf)
+
+    let decoded: T = try ProtobufDecoder().decode(from: data)
+    XCTAssertEqual(decoded, message)
+}
+
+func roundTrip<T>(_ message: T) throws where T: ProtobufComparable {
+    let protoData = try message.protobuf.serializedData()
+    let codableData = try ProtobufEncoder().encode(message)
+    print("Proto: \(protoData.bytes)")
+    print("Data:  \(codableData.bytes)")
+    
+    let decodedCodable: T = try ProtobufDecoder().decode(from: protoData)
+    XCTAssertEqual(message, decodedCodable)
+
+    let decodedProtobuf = try T.ProtobufType(serializedData: codableData)
+    XCTAssertEqual(T.init(protoObject: decodedProtobuf), message)
 }

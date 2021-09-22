@@ -25,22 +25,22 @@ extension UInt: BinaryCodable { }
 
 extension UInt8: FixedLengthWireType {
     
-    public var fixedLengthWireType: WireType { .length8 }
+    public static var fixedLengthWireType: WireType { .length8 }
 }
 
 extension UInt16: FixedLengthWireType {
     
-    public var fixedLengthWireType: WireType { .length16 }
+    public static var fixedLengthWireType: WireType { .length16 }
 }
 
 extension UInt32: FixedLengthWireType {
     
-    public var fixedLengthWireType: WireType { .length32 }
+    public static var fixedLengthWireType: WireType { .length32 }
 }
 
 extension UInt64: FixedLengthWireType {
     
-    public var fixedLengthWireType: WireType { .length64 }
+    public static var fixedLengthWireType: WireType { .length64 }
 }
 
 // Note: `UInt` does not conform to `FixedLengthWireType`,
@@ -105,7 +105,7 @@ extension UnsignedInteger {
     }
     
     /// The wire type of the integer (`varint`)
-    public var wireType: WireType {
+    public static var wireType: WireType {
         .varint
     }
     

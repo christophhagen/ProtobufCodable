@@ -1,7 +1,7 @@
 import Foundation
 import ProtobufCodable
 
-struct BasicMessage: Codable {
+struct BasicMessage: Codable, Equatable {
     
     enum CodingKeys: Int, CodingKey {
         case double = 1
@@ -60,6 +60,24 @@ struct BasicMessage: Codable {
 
 extension BasicMessage: ProtobufComparable {
 
+    init(protoObject: PB_BasicMessage) {
+        self.double = protoObject.double
+        self.float = protoObject.float
+        self.int32 = protoObject.int32
+        self.int64 = protoObject.int64
+        self.unsignedInt32 = protoObject.unsignedInt32
+        self.unsignedInt64 = protoObject.unsignedInt64
+        self.signedInt32 = protoObject.signedInt32
+        self.signedInt64 = protoObject.signedInt64
+        self.fixedInt32 = protoObject.fixedInt32
+        self.fixedInt64 = protoObject.fixedInt64
+        self.signedFixedInt32 = protoObject.signedFixedInt32
+        self.signedFixedInt64 = protoObject.signedFixedInt64
+        self.boolean = protoObject.boolean
+        self.string = protoObject.string
+        self.bytes = protoObject.bytes
+    }
+
     var protobuf: PB_BasicMessage {
         .with {
             $0.double = double
@@ -78,5 +96,12 @@ extension BasicMessage: ProtobufComparable {
             $0.string = string
             $0.bytes = bytes
         }
+    }
+}
+
+extension BasicMessage: CustomStringConvertible {
+
+    var description: String {
+        "Basic: \(double),\(float),\(int32),\(int64),\(unsignedInt32),\(unsignedInt64),\(signedInt32),\(signedInt64),\(fixedInt64),\(signedFixedInt32),\(signedFixedInt64),\(boolean),\(string),\(bytes.bytes)"
     }
 }
