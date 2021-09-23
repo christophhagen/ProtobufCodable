@@ -60,19 +60,23 @@ final class KeyedContainerDecodingNode<Key>: KeyedDecodingContainerProtocol wher
             }
             return try Primitive.init(encodedData: data) as! T
         case let Dict as AnyDictionary.Type:
+            // Find all fields with the appropriate key
             let all = fields.filter({ $0.key.intValue == key.intValue }).map({ $0.data })
 
             // Not really needed to catch empty dicts, but maybe a bit more performant
             guard !all.isEmpty else {
                 return Dict.init() as! T
             }
+            // Merge all fields together
             let data = all.map { $0.count.variableLengthEncoding + $0 }.reduce(.empty, +)
             let decoder = DictionaryDecodingNode(codingPath: [], userInfo: [:], data: data)
             return try .init(from: decoder)
         default:
-            let field = fields.last { $0.key.intValue == key.intValue }
-            let data = field?.data ?? .empty
-            let decoder = TopLevelDecodingContainer(codingPath: codingPath + [key], userInfo: [:], data: data)
+            // Find all fields with the appropriate key and join them together
+            let all = fields
+                .filter { $0.key.intValue == key.intValue }
+                .map { $0.data }
+            let decoder = TopLevelDecodingContainer(codingPath: codingPath + [key], userInfo: [:], data: all)
             return try T.init(from: decoder)
         }
     }

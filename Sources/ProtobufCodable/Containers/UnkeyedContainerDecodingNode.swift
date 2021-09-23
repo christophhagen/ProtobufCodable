@@ -10,27 +10,44 @@ final class UnkeyedContainerDecodingNode: UnkeyedDecodingContainer {
 
     private var nilIndices: Set<Int>
 
-    private let dataProvider: DecodingDataProvider
+    private var dataProvider: [DecodingDataProvider]
 
     var isAtEnd: Bool {
-        nilIndices.isEmpty && dataProvider.isAtEnd
+        guard nilIndices.isEmpty else {
+            return false
+        }
+        guard dataProvider.contains(where: { !$0.isAtEnd }) else {
+            return true
+        }
+        return false
+    }
+
+    private func currentProvider() -> DecodingDataProvider {
+        while let provider = dataProvider.first {
+            if provider.isAtEnd {
+                dataProvider.remove(at: 0)
+                continue
+            }
+            return provider
+        }
+        return .init(data: .empty)
     }
 
     private var nextValueIsNil: Bool {
         nilIndices.contains(currentIndex)
     }
 
-    init(codingPath: [CodingKey], provider: DecodingDataProvider) throws {
+    init(codingPath: [CodingKey], provider: [DecodingDataProvider]) throws {
         self.codingPath = codingPath
         #warning("Option to include nil values here")
         self.dataProvider = provider
-        guard !provider.isAtEnd else {
-            self.nilIndices = []
-            return
-        }
-//        self.nilIndices = []
-        let nilCount = try Int(from: provider)
-        self.nilIndices = Set(try (0..<nilCount).map { _ in try Int(from: provider) })
+//        guard !provider.isAtEnd else {
+//            self.nilIndices = []
+//            return
+//        }
+        self.nilIndices = []
+//        let nilCount = try Int(from: provider)
+//        self.nilIndices = Set(try (0..<nilCount).map { _ in try Int(from: provider) })
     }
 
     private func didDecodeValue() {
@@ -47,13 +64,14 @@ final class UnkeyedContainerDecodingNode: UnkeyedDecodingContainer {
     }
 
     func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+        let provider = currentProvider()
         switch type {
         case let Primitive as BinaryDecodable.Type:
-            let value = try Primitive.init(includingLengthFrom: dataProvider)
+            let value = try Primitive.init(includingLengthFrom: provider)
             didDecodeValue()
             return value as! T
         default:
-            let provider = nextValueIsNil ? DecodingDataProvider(data: .empty) : dataProvider
+            let provider = nextValueIsNil ? DecodingDataProvider(data: .empty) : provider
             let decoder = TopLevelDecodingContainer(codingPath: codingPath, userInfo: [:], provider: provider)
             let value = try type.init(from: decoder)
             didDecodeValue()

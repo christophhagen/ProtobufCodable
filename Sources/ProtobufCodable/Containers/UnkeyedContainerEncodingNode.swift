@@ -10,16 +10,21 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
 
     private var objects = [EncodedDataWrapper]()
 
+    var isEncodingOnlyScalarValues = true
+
     init(codingPath: [CodingKey]) {
         self.codingPath = codingPath
     }
 
     // MARK: Encoding values
 
+    var encodedNilIndices: Data {
+        nilIncides.sorted().map { $0.variableLengthEncoding }.reduce(.empty, +)
+    }
+
     var nilEncodingData: Data {
         let countData = nilIncides.count.variableLengthEncoding
-        let valueData = nilIncides.sorted().map { $0.variableLengthEncoding }.reduce(.empty, +)
-        return countData + valueData
+        return countData + encodedNilIndices
     }
 
     func encodeNil() throws {
@@ -39,14 +44,21 @@ final class UnkeyedContainerEncodingNode: UnkeyedEncodingContainer {
     }
 
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        objects.append(try primitive.encoded())
+        let wrapper = try primitive.encoded()
+        objects.append(wrapper)
+        if primitive.wireType == .lengthDelimited {
+            isEncodingOnlyScalarValues = false
+        }
     }
 
     private func encodeChild(_ child: Encodable) throws {
         let encoder = TopLevelEncodingContainer(codingPath: codingPath, userInfo: [:])
         try child.encode(to: encoder)
         let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: false)
+        // Object may be empty, but must still be encoded in an unkeyed container
+        print("\(type(of: child)): \(data.count)")
         objects.append(.init(data))
+        isEncodingOnlyScalarValues = false
     }
 
     // MARK: Children
@@ -72,7 +84,7 @@ extension UnkeyedContainerEncodingNode: EncodedDataProvider {
         objects
     }
 
-    func encodedDataToPrepend() throws -> Data {
-        nilEncodingData
+    func encodedDataToPrepend() throws -> EncodedDataWrapper? {
+        .init(encodedNilIndices)
     }
 }

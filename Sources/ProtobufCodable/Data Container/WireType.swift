@@ -86,8 +86,8 @@ extension WireType: CustomStringConvertible {
             return "length"
         case .startGroup:
             return "startGroup"
-        // case .endGroup:
-        //     return "endGroup"
+            // case .endGroup:
+            //     return "endGroup"
         case .nilValue:
             return "nil"
         case .length32:

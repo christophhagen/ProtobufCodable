@@ -36,6 +36,7 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
         let encoder = TopLevelEncodingContainer(codingPath: codingPath, userInfo: [:])
         try keyPair.encode(to: encoder)
         let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+        // A key pair will never produce empty data, and is always encoded
         let wrapper = EncodedDataWrapper(data)
         objects.append(wrapper)
     }

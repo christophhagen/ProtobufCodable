@@ -42,7 +42,7 @@ extension DictionaryEncodingNode: EncodedDataProvider {
         try object?.encodedObjects() ?? []
     }
 
-    func encodedDataToPrepend() throws -> Data {
-        try object?.encodedDataToPrepend() ?? .empty
+    func encodedDataToPrepend() throws -> EncodedDataWrapper? {
+        try object?.encodedDataToPrepend()
     }
 }

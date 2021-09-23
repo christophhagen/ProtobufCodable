@@ -4,7 +4,7 @@ struct Repeated: Codable {
     
     enum CodingKeys: Int, CodingKey {
         case unsigneds = 1
-        case messages
+        case messages = 2
     }
     
     var unsigneds: [UInt32] = []

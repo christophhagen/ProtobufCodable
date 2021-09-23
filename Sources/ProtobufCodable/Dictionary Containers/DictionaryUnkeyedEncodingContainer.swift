@@ -37,6 +37,7 @@ final class DictionaryUnkeyedEncodingContainer: UnkeyedEncodingContainer {
             let encoder = TopLevelEncodingContainer(codingPath: codingPath + [key], userInfo: [:])
             try value.encode(to: encoder)
             let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+            // Value may be empty data, but must still be encoded in a dictionary
             return .init(data, key: key)
         }
     }

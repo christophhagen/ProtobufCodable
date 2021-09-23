@@ -44,6 +44,7 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
     private func encodePrimitive(_ primitive: BinaryEncodable, forKey key: CodingKey) throws {
         // if primitive.isDefaultValue && omitDefaultValues { return }
         let wrapper = try primitive.encoded(withKey: key)
+        print("Key \(key.intValue!) - \(type(of: primitive)) (\(wrapper.wireType)): \(wrapper.data.count)")
         objects.append(wrapper)
     }
 
@@ -73,6 +74,15 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
         let encoder = TopLevelEncodingContainer(codingPath: codingPath + [key], userInfo: [:])
         try child.encode(to: encoder)
         let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+        print("Key \(key.intValue!) - \(type(of: child)): \(data.count)")
+        let preData = try encoder.encodedDataToPrepend()?.data
+        if data.isEmpty && (preData?.isEmpty ?? true) {
+            return
+        }
+        if let preData = preData, !preData.isEmpty {
+            let nilKey = NilCodingKey(codingKey: key)
+            objects.append(.init(preData, key: nilKey))
+        }
         objects.append(.init(data, key: key))
     }
 

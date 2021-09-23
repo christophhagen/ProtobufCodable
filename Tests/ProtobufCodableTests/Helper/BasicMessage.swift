@@ -102,6 +102,6 @@ extension BasicMessage: ProtobufComparable {
 extension BasicMessage: CustomStringConvertible {
 
     var description: String {
-        "Basic: \(double),\(float),\(int32),\(int64),\(unsignedInt32),\(unsignedInt64),\(signedInt32),\(signedInt64),\(fixedInt64),\(signedFixedInt32),\(signedFixedInt64),\(boolean),\(string),\(bytes.bytes)"
+        "Basic: \(double), \(float), \(int32), \(int64), \(unsignedInt32), \(unsignedInt64), \(signedInt32), \(signedInt64), \(fixedInt64), \(signedFixedInt32), \(signedFixedInt64), \(boolean), '\(string)', \(bytes.bytes)"
     }
 }

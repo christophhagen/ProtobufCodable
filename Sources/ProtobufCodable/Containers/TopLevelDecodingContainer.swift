@@ -6,22 +6,28 @@ final class TopLevelDecodingContainer: Decoder {
     
     var userInfo: [CodingUserInfoKey : Any]
     
-    let data: DecodingDataProvider
+    private let data: [DecodingDataProvider]
 
     init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], data: Data) {
         self.codingPath = codingPath
         self.userInfo = userInfo
-        self.data = DecodingDataProvider(data: data)
+        self.data = [DecodingDataProvider(data: data)]
+    }
+
+    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], data: [Data]) {
+        self.codingPath = codingPath
+        self.userInfo = userInfo
+        self.data = data.map(DecodingDataProvider.init)
     }
 
     init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], provider: DecodingDataProvider) {
         self.codingPath = codingPath
         self.userInfo = userInfo
-        self.data = provider
+        self.data = [provider]
     }
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        let container = try KeyedContainerDecodingNode<Key>(codingPath: codingPath, provider: data)
+        let container = try KeyedContainerDecodingNode<Key>(codingPath: codingPath, provider: data.last!)
         return KeyedDecodingContainer<Key>(container)
     }
     
@@ -30,6 +36,6 @@ final class TopLevelDecodingContainer: Decoder {
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        SingleValueDecodingNode(codingPath: codingPath, provider: data)
+        SingleValueDecodingNode(codingPath: codingPath, provider: data.last!)
     }
 }
