@@ -1,14 +1,8 @@
 import Foundation
 
-final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol where Key: CodingKey {
+final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
 
-    var codingPath: [CodingKey]
-
-    private var objects = [EncodedDataWrapper]()
-
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-    }
+    private var data = Data()
 
     // MARK: Encoding
 
@@ -25,27 +19,13 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
         switch value {
         case let primitive as BinaryEncodable:
             // if primitive.isDefaultValue && omitDefaultValues { return }
-            let wrapper = try primitive.encoded(withKey: key)
-            objects.append(wrapper)
+            let data = try primitive.encoded(withKey: key)
+            self.data.append(data)
         case is AnyDictionary:
             try encodeDictionary(value, forKey: key)
         default:
             try encodeChild(value, forKey: key)
         }
-    }
-
-    /**
-     Encodes a primitive for the given key.
-
-     A primitive is encoded using its wire type and field. Default values are omitted.
-     - Parameter primitive: The value to encode.
-     - Parameter key: The key to associate the value with.
-     */
-    private func encodePrimitive(_ primitive: BinaryEncodable, forKey key: CodingKey) throws {
-        // if primitive.isDefaultValue && omitDefaultValues { return }
-        let wrapper = try primitive.encoded(withKey: key)
-        print("Key \(key.intValue!) - \(type(of: primitive)) (\(wrapper.wireType)): \(wrapper.data.count)")
-        objects.append(wrapper)
     }
 
     /**
@@ -56,12 +36,10 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
      - Parameter key: The key to associate the value with.
      */
     private func encodeDictionary(_ dictionary: Encodable, forKey key: CodingKey) throws {
-        let encoder = DictionaryEncodingNode(codingPath: [], userInfo: [:])
+        let encoder = DictionaryEncodingNode(path: [], key: key, userInfo: [:])
         try dictionary.encode(to: encoder)
-        let pairs = try encoder.encodedObjects()
-        for pair in pairs {
-            objects.append(pair.with(key: key))
-        }
+        let data = try encoder.encodedData()
+        self.data.append(data)
     }
 
     /**
@@ -71,19 +49,10 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
      - Parameter key: The key to associate the value with.
      */
     private func encodeChild(_ child: Encodable, forKey key: CodingKey) throws {
-        let encoder = TopLevelEncodingContainer(codingPath: codingPath + [key], userInfo: [:])
+        let encoder = TopLevelEncodingContainer(path: codingPath + [key], key: key, userInfo: [:])
         try child.encode(to: encoder)
-        let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
-        print("Key \(key.intValue!) - \(type(of: child)): \(data.count)")
-        let preData = try encoder.encodedDataToPrepend()?.data
-        if data.isEmpty && (preData?.isEmpty ?? true) {
-            return
-        }
-        if let preData = preData, !preData.isEmpty {
-            let nilKey = NilCodingKey(codingKey: key)
-            objects.append(.init(preData, key: nilKey))
-        }
-        objects.append(.init(data, key: key))
+        let data = try encoder.encodedData()
+        self.data.append(data)
     }
 
     private func tag(for key: CodingKey) throws -> Data {
@@ -117,7 +86,10 @@ final class KeyedContainerEncodingNode<Key>: KeyedEncodingContainerProtocol wher
 
 extension KeyedContainerEncodingNode: EncodedDataProvider {
 
-    func encodedObjects() throws -> [EncodedDataWrapper] {
-        objects
+    func encodedData() throws -> Data {
+        if let key = self.key {
+            return try data.encoded(withKey: key)
+        }
+        return data
     }
 }

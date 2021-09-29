@@ -60,17 +60,16 @@ public final class DecodingDataProvider {
 
     func getKeyedField() throws -> (Tag, Data) {
         let tag = try Tag(from: self)
+        let data: Data
         // Most wire types have a fixed length
         if let length = tag.valueLength {
-            let data = try getNextBytes(length)
-            return (tag, data)
+            data = try getNextBytes(length)
+        }else if tag.wireType == .lengthDelimited {
+            data = try getLengthEncodedField()
+        } else {
+            // Only choice left is varint
+            data = try extractVarint()
         }
-        if tag.wireType == .lengthDelimited {
-            let data = try getLengthEncodedField()
-            return (tag, data)
-        }
-        // Only choice left is varint
-        let data = try extractVarint()
         return (tag, data)
     }
 
@@ -85,5 +84,12 @@ public final class DecodingDataProvider {
 
     func printAllBytes() {
         print("All: \(data)")
+    }
+}
+
+extension DecodingDataProvider: CustomStringConvertible {
+
+    public var description: String {
+        "\(processedBytes)/\(data.count) bytes: \(data[processedBytes...])"
     }
 }

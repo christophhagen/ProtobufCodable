@@ -19,13 +19,13 @@ public struct ProtobufEncoder {
     
     public func encode(_ value: Encodable) throws -> Data {
         if value is Dictionary<AnyHashable, Any> {
-            let encoder = DictionaryEncodingNode(codingPath: [], userInfo: [:])
+            let encoder = DictionaryEncodingNode(path: [], key: nil, userInfo: [:])
             try value.encode(to: encoder)
-            return try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+            return try encoder.encodedData()
         } else {
-            let encoder = TopLevelEncodingContainer(codingPath: [], userInfo: [:])
+            let encoder = TopLevelEncodingContainer(path: [], key: nil, userInfo: [:])
             try value.encode(to: encoder)
-            return try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
+            return try encoder.encodedData()
         }
     }
 }

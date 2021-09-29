@@ -1,8 +1,17 @@
 import Foundation
 
-final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtocol where Key: CodingKey {
-
-    var codingPath: [CodingKey]
+//struct DictionaryCodingKey: CodingKey {
+//
+//    let intValue: Int?
+//
+//    let stringValue: String
+//
+//    init(
+//}
+/**
+ Decoding node used to decode dictionaries with integer or string keys.
+ */
+final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
 
     var allKeys: [Key] {
         fields.map { $0.key }
@@ -10,9 +19,11 @@ final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtoco
 
     private var fields = [(key: Key, tag: Tag, value: Data)]()
 
-    init(codingPath: [CodingKey], provider: DecodingDataProvider) throws {
-        self.codingPath = codingPath
-        try decodeAllKeys(provider: provider)
+    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
+        super.init(path: path, key: key)
+        for (provider, _) in data {
+            try decodeAllKeys(provider: provider)
+        }
     }
 
     private func decodeAllKeys(provider: DecodingDataProvider) throws {
@@ -22,13 +33,11 @@ final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtoco
     }
 
     private func readKeyValuePair(provider: DecodingDataProvider) throws {
-        let data = try provider.getLengthEncodedField()
-        let keyPairInterpreter = DecodingDataProvider(data: data)
 
         var key: (tag: Tag, data: Data)?
         var value: Data?
-        while !keyPairInterpreter.isAtEnd {
-            let (t, d) = try keyPairInterpreter.getKeyedField()
+        while key == nil || value == nil {
+            let (t, d) = try provider.getKeyedField()
             guard let codingKey = KeyValuePair<Int, Int>.CodingKeys(rawValue: t.field) else {
                 fatalError()
             }
@@ -39,9 +48,10 @@ final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtoco
                 value = d
             }
         }
-        guard let (keyTag, keyData) = key, let valueData = value else {
-            fatalError()
-        }
+
+        let (keyTag, keyData) = key!
+        let valueData = value!
+
         switch keyTag.wireType {
         case .lengthDelimited:
             let stringKey = try String(encodedData: keyData)
@@ -85,7 +95,7 @@ final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtoco
     }
 
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
-        //(decodedKey, tag, data)
+
         guard let (_, data) = removeData(for: key) else {
             fatalError()
         }
@@ -94,13 +104,11 @@ final class DictionaryKeyedDecodingContainer<Key>: KeyedDecodingContainerProtoco
             return try Primitive.init(encodedData: data) as! T
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecodingContainer(codingPath: codingPath, userInfo: [:], provider: provider)
+            let decoder = TopLevelDecodingContainer(path: codingPath + [key], key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             return value
         }
     }
-
-
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         fatalError()

@@ -14,13 +14,13 @@ public struct ProtobufDecoder {
     }
     
     public func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
+        let data: [FieldWithNilData] = [(.init(data: data), nil)]
         if type is AnyDictionary.Type {
-            let decoder = DictionaryDecodingNode(codingPath: [], userInfo: [:], data: data)
+            let decoder = DictionaryDecodingNode(path: [], key: nil, userInfo: [:], data: data)
             return try .init(from: decoder)
         } else {
-            let decoder = TopLevelDecodingContainer(codingPath: [], userInfo: [:], data: data)
+            let decoder = TopLevelDecodingContainer(path: [], key: nil, info: [:], data: data)
             return try .init(from: decoder)
         }
-
     }
 }

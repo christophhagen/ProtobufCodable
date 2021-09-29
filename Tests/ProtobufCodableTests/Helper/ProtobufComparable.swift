@@ -98,9 +98,11 @@ func roundTrip<T>(_ message: T) throws where T: ProtobufComparable {
     let codableData = try ProtobufEncoder().encode(message)
     print("Proto: \(protoData.bytes)")
     print("Data:  \(codableData.bytes)")
-    
-    let decodedCodable: T = try ProtobufDecoder().decode(from: protoData)
-    XCTAssertEqual(message, decodedCodable)
+    let decodedCodable1: T = try ProtobufDecoder().decode(from: codableData)
+    XCTAssertEqual(message, decodedCodable1)
+
+    let decodedCodable2: T = try ProtobufDecoder().decode(from: protoData)
+    XCTAssertEqual(message, decodedCodable2)
 
     let decodedProtobuf = try T.ProtobufType(serializedData: codableData)
     XCTAssertEqual(T.init(protoObject: decodedProtobuf), message)

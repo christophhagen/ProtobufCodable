@@ -1,14 +1,15 @@
 import Foundation
 
-final class SingleValueDecodingNode: SingleValueDecodingContainer {
-    
-    let codingPath: [CodingKey]
-    
+final class SingleValueDecodingNode: CodingPathNode, SingleValueDecodingContainer {
+
     let dataProvider: DecodingDataProvider
 
-    init(codingPath: [CodingKey], provider: DecodingDataProvider) {
-        self.codingPath = codingPath
-        self.dataProvider = provider
+    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) {
+        // Select the last data object
+        // All previous values are discarded,
+        // because the container should only ever contain a single value
+        self.dataProvider = data.last?.field ?? .init(data: .empty)
+        super.init(path: path, key: key)
     }
     
     func decodeNil() -> Bool {
@@ -19,10 +20,8 @@ final class SingleValueDecodingNode: SingleValueDecodingContainer {
         switch type {
         case let a as BinaryDecodable.Type:
             return try a.init(includingLengthFrom: dataProvider) as! T
-            //return try a.init(from: dataProvider) as! T
         default:
             fatalError()
-           // return try T.init(from: self)
         }
     }
 }

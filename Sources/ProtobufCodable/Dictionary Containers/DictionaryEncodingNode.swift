@@ -1,16 +1,17 @@
 import Foundation
 
-final class DictionaryEncodingNode: Encoder {
-
-    let codingPath: [CodingKey]
+/**
+ An abstract node to encode a dictionary.
+ */
+final class DictionaryEncodingNode: CodingPathNode, Encoder {
 
     let userInfo: [CodingUserInfoKey : Any]
 
     private var object: EncodedDataProvider?
 
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
-        self.codingPath = codingPath
+    init(path: [CodingKey], key: CodingKey?, userInfo: [CodingUserInfoKey : Any]) {
         self.userInfo = userInfo
+        super.init(path: path, key: key)
     }
 
     @discardableResult
@@ -20,13 +21,15 @@ final class DictionaryEncodingNode: Encoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let object = DictionaryKeyedEncodingContainer<Key>(codingPath: codingPath)
+        // The coding path already includes the key, so it's not added again
+        let object = DictionaryKeyedEncodingContainer<Key>(path: codingPath, key: key)
         set(object: object)
         return KeyedEncodingContainer(object)
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        set(object: DictionaryUnkeyedEncodingContainer(codingPath: codingPath))
+        // The coding path already includes the key, so it's not added again
+        set(object: DictionaryUnkeyedEncodingContainer(path: codingPath, key: key))
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
@@ -38,11 +41,8 @@ final class DictionaryEncodingNode: Encoder {
 
 extension DictionaryEncodingNode: EncodedDataProvider {
 
-    func encodedObjects() throws -> [EncodedDataWrapper] {
-        try object?.encodedObjects() ?? []
-    }
-
-    func encodedDataToPrepend() throws -> EncodedDataWrapper? {
-        try object?.encodedDataToPrepend()
+    func encodedData() throws -> Data {
+        // Only pass through the data encoded by the wrapped container
+        try object?.encodedData() ?? .empty
     }
 }

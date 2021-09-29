@@ -1,23 +1,17 @@
 import Foundation
 
-final class SingleValueEncodingNode: SingleValueEncodingContainer {
+final class SingleValueEncodingNode: CodingPathNode, SingleValueEncodingContainer {
     
-    let codingPath: [CodingKey]
-    
-    var object: EncodedDataWrapper?
+    private var data: Data?
     
     private var encodedTypeInfo: String?
 
     var encodesNil: Bool {
-        object == nil
-    }
-    
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
+        data == nil
     }
     
     func encodeNil() throws {
-        self.object = nil
+        self.data = nil
         self.encodedTypeInfo = "nil"
     }
     
@@ -27,8 +21,12 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
 //            self.data = .empty
 //            return
 //        }
-        self.object = try primitive.encoded()
         self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
+        if let key = self.key {
+            self.data = try primitive.encoded(withKey: key)
+        } else {
+            self.data = try primitive.encodedWithLengthIfNeeded()
+        }
     }
     
     func encode<T>(_ value: T) throws where T: Encodable {
@@ -44,11 +42,8 @@ final class SingleValueEncodingNode: SingleValueEncodingContainer {
 
 extension SingleValueEncodingNode: EncodedDataProvider {
 
-    func encodedObjects() throws -> [EncodedDataWrapper] {
-        guard let object = object else {
-            return []
-        }
-        return [object]
+    func encodedData() throws -> Data {
+        data ?? .empty
     }
 }
 

@@ -1,8 +1,6 @@
 import Foundation
 
-final class DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
-
-    var codingPath: [CodingKey]
+final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingContainer {
 
     var count: Int?
 
@@ -14,10 +12,12 @@ final class DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
 
     private var fields = [(tag: Tag, data: Data)]()
 
-    init(codingPath: [CodingKey], data: DecodingDataProvider) throws {
-        self.codingPath = codingPath
+    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
+        super.init(path: path, key: key)
 
-        try decodeAllKeyValuePairs(provider: data)
+        for (provider, _) in data {
+            try decodeAllKeyValuePairs(provider: provider)
+        }
     }
 
     private func decodeAllKeyValuePairs(provider: DecodingDataProvider) throws {
@@ -27,13 +27,11 @@ final class DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     }
 
     private func readKeyValuePair(provider: DecodingDataProvider) throws {
-        let data = try provider.getLengthEncodedField()
-        let keyPairInterpreter = DecodingDataProvider(data: data)
 
         var key: (tag: Tag, data: Data)?
         var value: (tag: Tag, data: Data)?
-        while !keyPairInterpreter.isAtEnd {
-            let (t, d) = try keyPairInterpreter.getKeyedField()
+        while key == nil || value == nil {
+            let (t, d) = try provider.getKeyedField()
             guard let codingKey = KeyValuePair<Int, Int>.CodingKeys(rawValue: t.field) else {
                 fatalError()
             }
@@ -44,11 +42,8 @@ final class DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
                 value = (tag: t, data: d)
             }
         }
-        guard let (keyTag, keyData) = key, let (valueTag, valueData) = value else {
-            fatalError()
-        }
-        self.fields.append((keyTag, keyData))
-        self.fields.append((valueTag, valueData))
+        self.fields.append((key!.tag, key!.data))
+        self.fields.append((value!.tag, value!.data))
     }
 
     func decodeNil() throws -> Bool {
@@ -75,13 +70,13 @@ final class DictionaryUnkeyedDecodingContainer: UnkeyedDecodingContainer {
             } else {
                 provider = DecodingDataProvider(data: data)
             }
-            let decoder = TopLevelDecodingContainer(codingPath: codingPath, userInfo: [:], provider: provider)
+            let decoder = TopLevelDecodingContainer(path: codingPath, key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecodingContainer(codingPath: codingPath, userInfo: [:], provider: provider)
+            let decoder = TopLevelDecodingContainer(path: codingPath, key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value

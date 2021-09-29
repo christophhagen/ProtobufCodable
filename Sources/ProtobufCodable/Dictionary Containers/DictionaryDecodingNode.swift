@@ -1,32 +1,24 @@
 import Foundation
 
-final class DictionaryDecodingNode: Decoder {
-
-    let codingPath: [CodingKey]
+final class DictionaryDecodingNode: CodingPathNode, Decoder {
 
     let userInfo: [CodingUserInfoKey : Any]
 
-    let data: DecodingDataProvider
+    let data: [FieldWithNilData]
 
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], data: Data) {
-        self.codingPath = codingPath
+    init(path: [CodingKey], key: CodingKey?, userInfo: [CodingUserInfoKey : Any], data: [FieldWithNilData]) {
         self.userInfo = userInfo
-        self.data = DecodingDataProvider(data: data)
-    }
-
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], provider: DecodingDataProvider) {
-        self.codingPath = codingPath
-        self.userInfo = userInfo
-        self.data = provider
+        self.data = data
+        super.init(path: path, key: key)
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        let container = try DictionaryKeyedDecodingContainer<Key>(codingPath: codingPath, provider: data)
+        let container = try DictionaryKeyedDecodingContainer<Key>(path: codingPath, key: key, data: data)
         return KeyedDecodingContainer<Key>(container)
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        try DictionaryUnkeyedDecodingContainer(codingPath: codingPath, data: data)
+        try DictionaryUnkeyedDecodingContainer(path: codingPath, key: key, data: data)
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {

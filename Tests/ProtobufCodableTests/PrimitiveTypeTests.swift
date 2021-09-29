@@ -188,7 +188,7 @@ final class PrimitiveTypeTests: XCTestCase {
         // [1, 3, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 1, 255, 255, 255, 255, 255, 255, 255, 255, 127]
         try roundTripCompare([Optional<Int>].self, [.zero, .min, .max, nil])
 
-        // [1, 3, 0, 0, 0, 0, 255, 255, 127, 127, 218, 15, 73, 64]
+        // [1, 3,  0, 0, 0, 0,  255, 255, 127, 127,  218, 15, 73, 64]
         try roundTripCompare([Optional<Float>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 239, 127, 24, 45, 68, 84, 251, 33, 9, 64]
@@ -220,6 +220,7 @@ final class PrimitiveTypeTests: XCTestCase {
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255]
         try roundTripCompare([Optional<FixedLength<UInt64>>].self, [.zero ,.min, .max, nil])
+        
     }
 
     func testDictionaries() throws {
@@ -232,7 +233,8 @@ final class PrimitiveTypeTests: XCTestCase {
         // [8, 10, 4, 122, 101, 114, 111, 16, 0, 4, 8, 123, 16, 123]
         try roundTripCompare([String : Int].self, ["zero" : .zero, "123" : 123])
 
-        // [8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
+        // Either: [7, 8, 123, 18, 3, 49, 50, 51,   8, 8, 0, 18, 4, 122, 101, 114, 111]
+        // or:     [8, 8, 0, 18, 4, 122, 101, 114, 111,   7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCompare([Int32 : String].self, [.zero : "zero", 123 : "123"])
 
         // [6, 12, 18, 3, 110, 105, 108, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]

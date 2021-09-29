@@ -1,19 +1,19 @@
 import Foundation
 
-final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtocol where Key: CodingKey {
+/**
+ A dictionary encoding node for cases where the dictionary keys are either integers or strings.
+ */
+final class DictionaryKeyedEncodingContainer<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
 
-    let codingPath: [CodingKey]
-
-    private var objects = [EncodedDataWrapper]()
-
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-    }
+    private var data: Data = .empty
 
     func encodeNil(forKey key: Key) throws {
         fatalError()
     }
 
+    /**
+     Encode a value for a dictionary key.
+     */
     func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
         if let int = key.intValue {
             try encode(value, integerKey: int)
@@ -33,12 +33,10 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
     }
 
     private func encode(keyPair: Encodable) throws {
-        let encoder = TopLevelEncodingContainer(codingPath: codingPath, userInfo: [:])
+        let encoder = TopLevelEncodingContainer(path: codingPath, key: key, userInfo: [:])
         try keyPair.encode(to: encoder)
-        let data = try encoder.encodedDataWithoutField(includeLengthIfNeeded: true)
-        // A key pair will never produce empty data, and is always encoded
-        let wrapper = EncodedDataWrapper(data)
-        objects.append(wrapper)
+        let data = try encoder.encodedData()
+        self.data.append(data)
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -62,7 +60,7 @@ final class DictionaryKeyedEncodingContainer<Key>: KeyedEncodingContainerProtoco
 
 extension DictionaryKeyedEncodingContainer: EncodedDataProvider {
 
-    func encodedObjects() throws -> [EncodedDataWrapper] {
-        objects
+    func encodedData() throws -> Data {
+        data
     }
 }

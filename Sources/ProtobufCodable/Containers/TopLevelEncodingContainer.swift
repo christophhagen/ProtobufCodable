@@ -1,9 +1,7 @@
 import Foundation
 
-final class TopLevelEncodingContainer: Encoder {
+final class TopLevelEncodingContainer: CodingPathNode, Encoder {
 
-    var codingPath: [CodingKey]
-    
     var userInfo: [CodingUserInfoKey : Any]
     
     private var object: EncodedDataProvider?
@@ -14,35 +12,29 @@ final class TopLevelEncodingContainer: Encoder {
         return object
     }
     
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
-        self.codingPath = codingPath
+    init(path: [CodingKey], key: CodingKey?, userInfo: [CodingUserInfoKey : Any]) {
         self.userInfo = userInfo
+        super.init(path: path, key: key)
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let object = KeyedContainerEncodingNode<Key>(codingPath: codingPath)
+        let object = KeyedContainerEncodingNode<Key>(path: codingPath, key: key)
         set(object: object)
         return KeyedEncodingContainer(object)
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        set(object: UnkeyedContainerEncodingNode(codingPath: codingPath))
+        set(object: UnkeyedContainerEncodingNode(path: codingPath, key: key))
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        set(object: SingleValueEncodingNode(codingPath: codingPath))
+        set(object: SingleValueEncodingNode(path: codingPath, key: key))
     }
 }
 
 extension TopLevelEncodingContainer: EncodedDataProvider {
 
-    func encodedObjects() throws -> [EncodedDataWrapper] {
-        try object?.encodedObjects() ?? []
+    func encodedData() throws -> Data {
+        try object?.encodedData() ?? .empty
     }
-
-    func encodedDataToPrepend() throws -> EncodedDataWrapper? {
-        try object?.encodedDataToPrepend()
-    }
-
-    #warning("Set nil data")
 }

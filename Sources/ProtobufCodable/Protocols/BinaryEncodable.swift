@@ -28,10 +28,30 @@ extension BinaryEncodable where Self: BinaryDecodable, Self: Equatable {
 }
 
 extension BinaryEncodable {
-    
-    func encoded(withKey key: CodingKey? = nil) throws -> EncodedDataWrapper {
-        .init(try binaryData(),
-              wireType: wireType,
-              key: key)
+
+    /**
+     Encodes a value with a key by prepending a tag.
+
+     - Note: Values requiring length information (e.g `String`, `Data`) have the length information added after the tag.
+     - Parameter key: The coding key to use for encoding.
+     - Returns: The encoded data, with a tag and the length information prepended (if needed)
+     */
+    func encoded(withKey key: CodingKey) throws -> Data {
+        #warning("Entry point for string field encoding")
+        let field = key.intValue!
+        let tag = wireType.tag(with: field)
+        return try tag + encodedWithLengthIfNeeded()
+    }
+
+    /**
+     Encode a value without a key, and including length information for appropriate types.
+     - Returns: The encoded data, with the length information prepended (if needed)
+     */
+    func encodedWithLengthIfNeeded() throws -> Data {
+        let data = try binaryData()
+        guard wireType == .lengthDelimited else {
+            return data
+        }
+        return data.count.binaryData() + data
     }
 }

@@ -1,41 +1,29 @@
 import Foundation
 
-final class TopLevelDecodingContainer: Decoder {
+typealias FieldWithNilData = (field: DecodingDataProvider, nilData: Data?)
 
-    var codingPath: [CodingKey]
+final class TopLevelDecodingContainer: CodingPathNode, Decoder {
+
+    let userInfo: [CodingUserInfoKey : Any]
     
-    var userInfo: [CodingUserInfoKey : Any]
-    
-    private let data: [DecodingDataProvider]
+    private let data: [FieldWithNilData]
 
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], data: Data) {
-        self.codingPath = codingPath
-        self.userInfo = userInfo
-        self.data = [DecodingDataProvider(data: data)]
-    }
-
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], data: [Data]) {
-        self.codingPath = codingPath
-        self.userInfo = userInfo
-        self.data = data.map(DecodingDataProvider.init)
-    }
-
-    init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], provider: DecodingDataProvider) {
-        self.codingPath = codingPath
-        self.userInfo = userInfo
-        self.data = [provider]
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) {
+        self.userInfo = info
+        self.data = data
+        super.init(path: path, key: key)
     }
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        let container = try KeyedContainerDecodingNode<Key>(codingPath: codingPath, provider: data.last!)
+        let container = try KeyedContainerDecodingNode<Key>(path: codingPath, key: key, data: data)
         return KeyedDecodingContainer<Key>(container)
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        try UnkeyedContainerDecodingNode(codingPath: codingPath, provider: data)
+        try UnkeyedContainerDecodingNode(path: codingPath, key: key, data: data)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        SingleValueDecodingNode(codingPath: codingPath, provider: data.last!)
+        SingleValueDecodingNode(path: codingPath, key: key, data: data)
     }
 }
