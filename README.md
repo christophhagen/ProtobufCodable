@@ -107,7 +107,7 @@ There are currently no encoding options exposed publicly. Additional options may
 Protobuf messages are constructed from a limited set of primitives (aka *scalar types*), which are listed in the [official documentation](https://developers.google.com/protocol-buffers/docs/proto3#scalar).
 
 Protobuf primitive | ProtobufCodable type | Comment
------------------- | ---------- | -------
+------------------ | -------------------- | -------
 `double` | `Double` | Always 8 bytes
 `float` | `Float` | Always 4 bytes
 `int32` | `Int32` | Uses variable-length encoding
