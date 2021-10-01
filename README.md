@@ -106,16 +106,16 @@ There are currently no encoding options exposed publicly. Additional options may
 
 Protobuf messages are constructed from a limited set of primitives (aka *scalar types*), which are listed in the [official documentation](https://developers.google.com/protocol-buffers/docs/proto3#scalar).
 
-Protobuf primitive | ProtobufCodable type | Comment
------------------- | -------------------- | -------
+| Protobuf primitive | ProtobufCodable type | Comment |
+| --- | --- | --- |
 `double` | `Double` | Always 8 bytes
 `float` | `Float` | Always 4 bytes
 `int32` | `Int32` | Uses variable-length encoding
 `int64` | `Int64` | Uses variable-length encoding
 `uint32` | `UInt32` | Uses variable-length encoding
 `uint64` | `UInt64` | Uses variable-length encoding
-`sint32` | `Signed<Int32>` | See [`SignedValue` wrapper](#fixed-types)
-`sint64` | `Signed<Int64>` |  See [`SignedValue` wrapper](#fixed-types)
+`sint32` | `Signed<Int32>` | See [`SignedValue` wrapper](#signed-types)
+`sint64` | `Signed<Int64>` |  See [`SignedValue` wrapper](#signed-types)
 `fixed32` | `FixedWidth<UInt32>` | See [`FixedWidth` wrapper](#fixed-width-types)
 `fixed64` | `FixedWidth<UInt64>` | See [`FixedWidth` wrapper](#fixed-width-types)
 `sfixed32` | `FixedWidth<Int32>` | See [`FixedWidth` wrapper](#fixed-width-types)
