@@ -38,8 +38,8 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
         var value: Data?
         while key == nil || value == nil {
             let (t, d) = try provider.getKeyedField()
-            guard let codingKey = KeyValuePair<Int, Int>.CodingKeys(rawValue: t.field) else {
-                fatalError()
+            guard let codingKey = t.dictionaryKey else {
+                throw ProtobufDecodingError.invalidDictionaryKey
             }
             switch codingKey {
             case .key:
@@ -56,17 +56,19 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
         case .lengthDelimited:
             let stringKey = try String(encodedData: keyData)
             guard let codingKey = Key(stringValue: stringKey) else {
-                fatalError()
+                // Should never happen, since all strings are valid dictionary keys
+                throw ProtobufDecodingError.invalidDictionaryKey
             }
             self.fields.append((key: codingKey, tag: keyTag, value: valueData))
         case .varint:
             let intKey = try Int(encodedData: keyData)
             guard let codingKey = Key(intValue: intKey) else {
-                fatalError()
+                // Should never happen, since all integers are valid dictionary keys
+                throw ProtobufDecodingError.invalidDictionaryKey
             }
             self.fields.append((key: codingKey, tag: keyTag, value: valueData))
         default:
-            fatalError()
+            throw ProtobufDecodingError.invalidDictionaryKey
         }
     }
 
@@ -75,11 +77,7 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
     }
 
     private func index(of key: Key) -> Int? {
-        if let key = key.intValue {
-            return fields.firstIndex { $0.key.intValue == key }
-        }
-        let key = key.stringValue
-        return fields.firstIndex { $0.key.stringValue == key }
+        fields.firstIndex { $0.key.isEqual(to: key) }
     }
 
     private func removeData(for key: Key) -> (tag: Tag, key: Data)? {
@@ -91,13 +89,13 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.KeyedContainer.decodeNil(forKey:)")
     }
 
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
 
         guard let (_, data) = removeData(for: key) else {
-            fatalError()
+            throw ProtobufDecodingError.missingDictionaryKey
         }
         switch type {
         case let Primitive as BinaryDecodable.Type:
@@ -111,19 +109,19 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.KeyedContainer.nestedContainer(keyedBy:forKey:)")
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.KeyedContainer.nestedUnkeyedContainer(forKey:)")
     }
 
     func superDecoder() throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.KeyedContainer.superDecoder()")
     }
 
     func superDecoder(forKey key: Key) throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.KeyedContainer.superDecoder(forKey:)")
     }
 
 

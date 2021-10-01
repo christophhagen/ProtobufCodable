@@ -1,5 +1,5 @@
 import Foundation
-import ProtobufCodable
+@testable import ProtobufCodable
 
 struct BasicMessage: Codable, Equatable {
     
@@ -39,16 +39,16 @@ struct BasicMessage: Codable, Equatable {
     @SignedValue
     var signedInt64: Int64 = 0
     
-    @FixedLength
+    @FixedWidth
     var fixedInt32: UInt32 = 0
     
-    @FixedLength
+    @FixedWidth
     var fixedInt64: UInt64 = 0
     
-    @FixedLength
+    @FixedWidth
     var signedFixedInt32: Int32 = 0
     
-    @FixedLength
+    @FixedWidth
     var signedFixedInt64: Int64 = 0
     
     var boolean: Bool = false

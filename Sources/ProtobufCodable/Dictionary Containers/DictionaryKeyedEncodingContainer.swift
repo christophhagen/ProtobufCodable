@@ -5,16 +5,19 @@ import Foundation
  */
 final class DictionaryKeyedEncodingContainer<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
 
-    private var data: Data = .empty
+    private var objects = [EncodedDataProvider]()
 
     func encodeNil(forKey key: Key) throws {
-        fatalError()
+        throw ProtobufEncodingError.notImplemented("Dictionary.KeyedEncodingContainer.encodeNil(forKey:)")
     }
 
     /**
      Encode a value for a dictionary key.
      */
     func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
+        // Here we encode the key (integer or string) and the value
+        // It's a bit confusing that the Codable implementation uses CodingKeys
+        // to encode dictionary keys when the types are `Int` or `String`
         if let int = key.intValue {
             try encode(value, integerKey: int)
         } else {
@@ -35,16 +38,19 @@ final class DictionaryKeyedEncodingContainer<Key>: CodingPathNode, KeyedEncoding
     private func encode(keyPair: Encodable) throws {
         let encoder = TopLevelEncodingContainer(path: codingPath, key: key, userInfo: [:])
         try keyPair.encode(to: encoder)
-        let data = try encoder.encodedData()
-        self.data.append(data)
+        self.objects.append(encoder)
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        let container = KeyedContainerEncodingNode<NestedKey>(path: codingPath + [key], key: key)
+        self.objects.append(container)
+        return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        fatalError()
+        let container = UnkeyedContainerEncodingNode(path: codingPath + [key], key: key)
+        self.objects.append(container)
+        return container
     }
 
     func superEncoder() -> Encoder {
@@ -61,6 +67,6 @@ final class DictionaryKeyedEncodingContainer<Key>: CodingPathNode, KeyedEncoding
 extension DictionaryKeyedEncodingContainer: EncodedDataProvider {
 
     func encodedData() throws -> Data {
-        data
+        try objects.reduce(.empty) { try $0 + $1.encodedData() }
     }
 }

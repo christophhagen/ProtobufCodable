@@ -16,7 +16,7 @@ final class SingleValueEncodingNode: CodingPathNode, SingleValueEncodingContaine
     }
     
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        #warning("Should values be ommitted sometimes?")
+        #warning("Implement `omitDefaultValues` option")
 //        if primitive.isDefaultValue && omitDefaultValues {
 //            self.data = .empty
 //            return
@@ -34,8 +34,7 @@ final class SingleValueEncodingNode: CodingPathNode, SingleValueEncodingContaine
         case let primitive as BinaryEncodable:
             try encodePrimitive(primitive)
         default:
-            #warning("Encode complex types in SingleValueContainer")
-            fatalError()
+            throw ProtobufEncodingError.notImplemented("SingleValueContainer.encode(_)")
         }
     }
 }

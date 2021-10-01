@@ -15,10 +15,10 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
         keyData == nil
     }
 
-    private var data: Data = .empty
+    private var objects = [EncodedDataProvider]()
 
     func encodeNil() throws {
-        fatalError()
+        throw ProtobufEncodingError.notImplemented("Dictionary.UnkeyedEncodingContainer.encodeNil()")
     }
 
     private func encode<T>(_ value: T, forKey key: DictCodingKey) throws -> Data where T: Encodable {
@@ -48,17 +48,21 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
         } else {
             data = try keyValuePairData.binaryData()
         }
-        self.data.append(data)
+        self.objects.append(data)
         self.keyData = nil
         count += 1
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        let container = KeyedContainerEncodingNode<NestedKey>(path: codingPath, key: key)
+        self.objects.append(container)
+        return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
+        let container = UnkeyedContainerEncodingNode(path: codingPath, key: key)
+        self.objects.append(container)
+        return container
     }
 
     func superEncoder() -> Encoder {
@@ -71,6 +75,6 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
 extension DictionaryUnkeyedEncodingContainer: EncodedDataProvider {
 
     func encodedData() throws -> Data {
-        data
+        try objects.reduce(.empty) { try $0 + $1.encodedData() }
     }
 }

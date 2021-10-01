@@ -123,16 +123,14 @@ final class UnkeyedContainerDecodingNode: CodingPathNode, UnkeyedDecodingContain
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("UnkeyedContainer.nestedContainer(keyedBy:)")
     }
 
     func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("UnkeyedContainer.nestedUnkeyedContainer()")
     }
 
     func superDecoder() throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("UnkeyedContainer.superDecoder()")
     }
-
-
 }

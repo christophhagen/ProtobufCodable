@@ -32,8 +32,8 @@ final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingC
         var value: (tag: Tag, data: Data)?
         while key == nil || value == nil {
             let (t, d) = try provider.getKeyedField()
-            guard let codingKey = KeyValuePair<Int, Int>.CodingKeys(rawValue: t.field) else {
-                fatalError()
+            guard let codingKey = t.dictionaryKey else {
+                throw ProtobufDecodingError.invalidDictionaryKey
             }
             switch codingKey {
             case .key:
@@ -47,12 +47,12 @@ final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingC
     }
 
     func decodeNil() throws -> Bool {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.UnkeyedContainer.decodeNil()")
     }
 
     func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         guard !fields.isEmpty else {
-            fatalError()
+            throw ProtobufDecodingError.missingData
         }
         let (tag, data) = fields.remove(at: 0)
         switch type {
@@ -88,15 +88,15 @@ final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingC
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.UnkeyedContainer.nestedContainer(keyedBy:)")
     }
 
     func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.UnkeyedContainer.nestedUnkeyedContainer()")
     }
 
     func superDecoder() throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.UnkeyedContainer.superDecoder()")
     }
 
 

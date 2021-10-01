@@ -27,14 +27,14 @@ public enum WireType: Int {
      Used for: `string`, `bytes`, embedded messages, packed repeated fields
      */
     case lengthDelimited = 2
-    
+
     /**
      Start group.
      
      Used for: groups (deprecated).
      */
-    @available(*, deprecated, message: "Deprecated wire type")
-    case startGroup = 3
+    //@available(*, deprecated, message: "Deprecated wire type")
+    //case startGroup = 3
     
     /**
      End group.
@@ -44,6 +44,14 @@ public enum WireType: Int {
     //@available(*, deprecated, message: "Deprecated wire type")
     //case endGroup = 4
     
+    /**
+     Indicates the presence of a string key.
+
+     A string key is composed of the string length as the field number, followed by the actual field name as a UTF-8 string.
+     A second tag (field nr = 0) follows the string, describing the actual data contained in the field.
+     */
+    case stringKey = 3
+
     /**
      Encodes a nil value.
      
@@ -84,10 +92,12 @@ extension WireType: CustomStringConvertible {
             return "64bit"
         case .lengthDelimited:
             return "length"
-        case .startGroup:
-            return "startGroup"
+            // case .startGroup:
+            //    return "startGroup"
             // case .endGroup:
             //     return "endGroup"
+        case .stringKey:
+            return "string key"
         case .nilValue:
             return "nil"
         case .length32:
@@ -101,17 +111,6 @@ extension WireType: CustomStringConvertible {
 }
 
 extension WireType: Decodable {
-    
-    /**
-     Create a tag (field number + wire type).
-     
-     Each key in the streamed message is a `varint` with the value `(field_number << 3) | wire_type` – in other words, the last three bits of the number store the wire type. The definition of the tag/key encoding is available in the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure) documentation.
-     - Parameter field: The id of the field which is encoded with the wire type.
-     - Returns: The encoded tag.
-     */
-    func tag(with field: Int) -> Data {
-        Tag(type: self, field: field).data
-    }
     
     /// Indicate if the wire type is compatible with the Google Protobuf definition.
     var isProtobufCompatible: Bool {

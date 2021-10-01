@@ -3,7 +3,7 @@ import Foundation
 /**
  A protocol adopted by all types which can be converted to binary data.
  */
-public protocol BinaryEncodable: WireTypeProvider, Encodable {
+ protocol BinaryEncodable: WireTypeProvider, Encodable {
     
     /**
      Encode the value to binary data compatible with the protobuf encoding.
@@ -20,9 +20,9 @@ public protocol BinaryEncodable: WireTypeProvider, Encodable {
 }
 
 extension BinaryEncodable where Self: BinaryDecodable, Self: Equatable {
-    
+
     /// The value is equal to the default protobuf value `false`
-    public var isDefaultValue: Bool {
+    var isDefaultValue: Bool {
         self == Self.defaultValue
     }
 }
@@ -37,10 +37,7 @@ extension BinaryEncodable {
      - Returns: The encoded data, with a tag and the length information prepended (if needed)
      */
     func encoded(withKey key: CodingKey) throws -> Data {
-        #warning("Entry point for string field encoding")
-        let field = key.intValue!
-        let tag = wireType.tag(with: field)
-        return try tag + encodedWithLengthIfNeeded()
+        try Tag(type: wireType, key: key).data() + encodedWithLengthIfNeeded()
     }
 
     /**

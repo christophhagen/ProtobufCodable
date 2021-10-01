@@ -6,7 +6,6 @@ final class PrimitiveTypeTests: XCTestCase {
 
     func roundTrip<T>(_ type: T.Type = T.self, _ value: T) throws where T: Codable, T: Equatable {
         let data = try ProtobufEncoder().encode(value)
-        print("Data: \(data.bytes)")
         let decoded = try ProtobufDecoder().decode(T.self, from: data)
         XCTAssertEqual(decoded, value)
         if decoded != value {
@@ -21,12 +20,12 @@ final class PrimitiveTypeTests: XCTestCase {
         try values.forEach { try roundTrip(type, $0) }
     }
     
-    private func roundTripCompare<T>(_ type: SignedValue<T>.Type = SignedValue<T>.self, _ values: T...) throws {
+    private func roundTripCompare<T>(_ type: SignedValue<T>.Type = SignedValue<T>.self, _ values: T...) throws where T: SignedValueCompatible, T: Codable {
         try values.forEach { try roundTrip(type, SignedValue<T>.init(wrappedValue: $0)) }
     }
-    
-    private func roundTripCompare<T>(_ type: FixedLength<T>.Type = FixedLength<T>.self, _ values: T...) throws {
-        try values.forEach { try roundTrip(type, FixedLength<T>.init(wrappedValue: $0)) }
+
+    private func roundTripCompare<T>(_ type: FixedWidth<T>.Type = FixedWidth<T>.self, _ values: T...) throws where T: FixedWidthCompatible, T: Codable, T: Equatable {
+        try values.forEach { try roundTrip(type, FixedWidth<T>.init(wrappedValue: $0)) }
     }
     
     func testUInt8() throws {
@@ -88,19 +87,19 @@ final class PrimitiveTypeTests: XCTestCase {
     }
     
     func testFixedInt32() throws {
-        try roundTripCompare(FixedLength<UInt32>.self, .zero, 123, .min, .max)
+        try roundTripCompare(FixedWidth<UInt32>.self, .zero, 123, .min, .max)
     }
     
     func testFixedInt64() throws {
-        try roundTripCompare(FixedLength<UInt64>.self, .zero, 123, .min, .max)
+        try roundTripCompare(FixedWidth<UInt64>.self, .zero, 123, .min, .max)
     }
     
     func testSignedFixedInt32() throws {
-        try roundTripCompare(FixedLength<Int32>.self, .zero, 123, -123, .min, .max)
+        try roundTripCompare(FixedWidth<Int32>.self, .zero, 123, -123, .min, .max)
     }
     
     func testSignedFixedInt64() throws {
-        try roundTripCompare(FixedLength<Int64>.self, .zero, 123, -123, .min, .max)
+        try roundTripCompare(FixedWidth<Int64>.self, .zero, 123, -123, .min, .max)
     }
     
     func testBoolean() throws {
@@ -210,16 +209,16 @@ final class PrimitiveTypeTests: XCTestCase {
         try roundTripCompare([Optional<SignedValue<Int64>>].self, [.zero ,.min, .max, nil])
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 127]
-        try roundTripCompare([Optional<FixedLength<Int32>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedWidth<Int32>>].self, [.zero ,.min, .max, nil])
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 255, 255, 255, 255, 127]
-        try roundTripCompare([Optional<FixedLength<Int64>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedWidth<Int64>>].self, [.zero ,.min, .max, nil])
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255]
-        try roundTripCompare([Optional<FixedLength<UInt32>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedWidth<UInt32>>].self, [.zero ,.min, .max, nil])
 
         // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255]
-        try roundTripCompare([Optional<FixedLength<UInt64>>].self, [.zero ,.min, .max, nil])
+        try roundTripCompare([Optional<FixedWidth<UInt64>>].self, [.zero ,.min, .max, nil])
         
     }
 

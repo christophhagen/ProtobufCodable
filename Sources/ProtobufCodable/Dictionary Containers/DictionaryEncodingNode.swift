@@ -33,7 +33,7 @@ final class DictionaryEncodingNode: CodingPathNode, Encoder {
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError()
+        set(object: SingleValueEncodingNode(path: codingPath, key: key))
     }
 }
 

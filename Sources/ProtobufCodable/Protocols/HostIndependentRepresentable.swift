@@ -1,16 +1,19 @@
 import Foundation
 
 /**
- A protocol adopted by primitive types which can be converted to a binary representation which is platform-independent.
+ A protocol adopted by primitive types which can be converted to a platform-independent binary representation.
  
  In order to provide full protocol conformance, the following must be true for all values:
- ```
+ ```swift
  let converted = value.hostIndependentRepresentation
  value == .init(fromHostIndependentRepresentation: converted) // true
  ```
+
+ The host-independent representation is in little-endian format,
+ in order to be compatible with the [Protocol Buffers:  Encoding](https://developers.google.com/protocol-buffers/docs/encoding#non-varint_numbers)
  */
-public protocol HostIndependentRepresentable {
-    
+protocol HostIndependentRepresentable {
+
     /// The type storing the platform-independent representation
     associatedtype IndependentType
     
@@ -29,7 +32,7 @@ public protocol HostIndependentRepresentable {
 
 extension HostIndependentRepresentable where IndependentType: AdditiveArithmetic {
     
-    public static var empty: IndependentType { .zero }
+    static var empty: IndependentType { .zero }
 }
 
 extension HostIndependentRepresentable {

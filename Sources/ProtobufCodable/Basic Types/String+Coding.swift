@@ -8,13 +8,16 @@ extension String: BinaryEncodable {
      - Note: The length of the string is prepended to the data encoded as a variable-length unsigned integer.
      - Throws: `BinaryEncodingError.stringNotRepresentableInUTF8` if the string can't be converted to UTF8
      */
-    public func binaryData() throws -> Data {
+    func binaryData() throws -> Data {
         guard let data = data(using: .utf8) else {
             throw ProtobufEncodingError.stringNotRepresentableInUTF8(self)
         }
         return data
         // return data.count.variableLengthEncoding + data
     }
+}
+
+extension String: WireTypeProvider {
     
     /// The wire type of a string (`lengthDelimited`)
     public static var wireType: WireType {
@@ -23,10 +26,14 @@ extension String: BinaryEncodable {
 }
 
 extension String: BinaryDecodable {
-    
-    public init(from byteProvider: DecodingDataProvider) throws {
-        //let length = try Int(from: byteProvider)
-        //let data = try byteProvider.getNextBytes(length)
+
+    /**
+     Decode a string from a data provider.
+
+     Reads all remaining bytes from the container.
+     - Throws: `ProtobufDecodingError.invalidString`, if the string encoding is invalid.
+     */
+    init(from byteProvider: DecodingDataProvider) throws {
         let data = byteProvider.getRemainingBytes()
         guard let s = String(data: data, encoding: .utf8) else {
             throw ProtobufDecodingError.invalidString
@@ -34,7 +41,8 @@ extension String: BinaryDecodable {
         self = s
     }
 
-    public static var defaultValue: String {
+    /// The default value is an empty string.
+    static var defaultValue: String {
         .empty
     }
 }

@@ -6,10 +6,12 @@ extension Data: BinaryEncodable {
      Encode the wrapped value to binary data compatible with the protobuf encoding.
      - Returns: The binary data without change.
      */
-    public func binaryData() throws -> Data {
+    func binaryData() throws -> Data {
         self
-//        count.variableLengthEncoding + self
     }
+}
+
+extension Data: WireTypeProvider {
     
     /// The wire type of binary data (length delimited)
     public static var wireType: WireType {
@@ -18,14 +20,19 @@ extension Data: BinaryEncodable {
 }
 
 extension Data: BinaryDecodable {
-    
-    public init(from byteProvider: DecodingDataProvider) throws {
+
+    /**
+     Create data from a data container.
+
+     The data uses all remaining bytes from the container.
+     - Parameter byteProvider: The container with the encoded data.
+     */
+    init(from byteProvider: DecodingDataProvider) {
         self = byteProvider.getRemainingBytes()
-//        let count = try Int(from: byteProvider)
-//        self = try byteProvider.getNextBytes(count)
     }
 
-    public static var defaultValue: Data {
+    /// An empty data object is the default.
+    static var defaultValue: Data {
         .empty
     }
 }

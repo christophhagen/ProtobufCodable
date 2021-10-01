@@ -3,12 +3,24 @@ import Foundation
 // MARK: BinaryEncodable
 
 extension UInt8: BinaryCodable {
-    
-    public func binaryData() -> Data {
-        [self].data
+
+    /**
+     Convert the value to binary data.
+
+     The value is converted to exactly one byte.
+     - Returns: The binary data
+     */
+    func binaryData() -> Data {
+        Data([self])
     }
-    
-    public init(from byteProvider: DecodingDataProvider) throws {
+
+    /**
+     Decode a `UInt8` from a data provider.
+
+     Reads a single byte from the container.
+     - Throws: `ProtobufDecodingError.missingData`, if no more bytes are available.
+     */
+    init(from byteProvider: DecodingDataProvider) throws {
         self = try byteProvider.getNextByte()
     }
 }
@@ -21,73 +33,101 @@ extension UInt64: BinaryCodable { }
 
 extension UInt: BinaryCodable { }
 
-// MARK: FixedLengthWireType
+// MARK: WireTypeProvider
 
-extension UInt8: FixedLengthWireType {
-    
-    public static var fixedLengthWireType: WireType { .length8 }
+extension UInt8: WireTypeProvider {
+    // UInt8 does not conform to `FixedLengthWireType`, because
+    // it's only needed for the `FixedWidth` property wrapper,
+    // which has no effect on UInt8
 }
 
-extension UInt16: FixedLengthWireType {
-    
+// MARK: FixedLengthWireType
+
+extension UInt16: FixedWidthCompatible {
+
+    /// The wire type of a `UInt16` is `length16`
     public static var fixedLengthWireType: WireType { .length16 }
 }
 
-extension UInt32: FixedLengthWireType {
-    
+extension UInt32: FixedWidthCompatible {
+
+    /// The wire type of a `UInt32` is `length32`
     public static var fixedLengthWireType: WireType { .length32 }
 }
 
-extension UInt64: FixedLengthWireType {
-    
+extension UInt64: FixedWidthCompatible {
+
+    /// The wire type of a `UInt64` is `length64`
     public static var fixedLengthWireType: WireType { .length64 }
 }
 
-// Note: `UInt` does not conform to `FixedLengthWireType`,
+// Note: `UInt` does not conform to `FixedWidthCompatible`,
 // because it may have different width on different systems
 
 // MARK: HostIndependentRepresentable
 
 extension UInt8: HostIndependentRepresentable {
-    
-    public var hostIndependentRepresentation: UInt8 {
+
+    /// The independent representation (equivalent to the original value)
+    var hostIndependentRepresentation: UInt8 {
         self
     }
-    
-    public init(fromHostIndependentRepresentation value: UInt8) {
+
+    /**
+     Create an `UInt8` value from its host-independent (little endian) representation.
+
+     For `UInt8`, the independent representation is the same as the original value.
+     - Parameter value: The host-independent representation
+     */
+    init(fromHostIndependentRepresentation value: UInt8) {
         self = value
     }
 }
 
 extension UInt16: HostIndependentRepresentable {
-    
-    public var hostIndependentRepresentation: UInt16 {
+
+    /// The little-endian representation
+    var hostIndependentRepresentation: UInt16 {
         CFSwapInt16HostToLittle(self)
     }
-    
-    public init(fromHostIndependentRepresentation value: UInt16) {
+
+    /**
+     Create an `UInt16` value from its host-independent (little endian) representation.
+     - Parameter value: The host-independent representation
+     */
+    init(fromHostIndependentRepresentation value: UInt16) {
         self = CFSwapInt16LittleToHost(value)
     }
 }
 
 extension UInt32: HostIndependentRepresentable {
-    
-    public var hostIndependentRepresentation: UInt32 {
+
+    /// The little-endian representation
+    var hostIndependentRepresentation: UInt32 {
         CFSwapInt32HostToLittle(self)
     }
-    
-    public init(fromHostIndependentRepresentation value: UInt32) {
+
+    /**
+     Create an `UInt32` value from its host-independent (little endian) representation.
+     - Parameter value: The host-independent representation
+     */
+    init(fromHostIndependentRepresentation value: UInt32) {
         self = CFSwapInt32LittleToHost(value)
     }
 }
 
 extension UInt64: HostIndependentRepresentable {
-    
-    public var hostIndependentRepresentation: UInt64 {
+
+    /// The little-endian representation
+    var hostIndependentRepresentation: UInt64 {
         CFSwapInt64HostToLittle(self)
     }
-    
-    public init(fromHostIndependentRepresentation value: UInt64) {
+
+    /**
+     Create an `UInt64` value from its host-independent (little endian) representation.
+     - Parameter value: The host-independent representation
+     */
+    init(fromHostIndependentRepresentation value: UInt64) {
         self = CFSwapInt64LittleToHost(value)
     }
 }
@@ -100,14 +140,20 @@ extension UnsignedInteger {
      Encodes the integer into binary data, using variable length encoding.
      - Returns: The binary data of the converted value.
      */
-    public func binaryData() -> Data {
+    func binaryData() -> Data {
         variableLengthEncoding
     }
-    
+}
+
+extension UnsignedInteger {
+
     /// The wire type of the integer (`varint`)
     public static var wireType: WireType {
         .varint
     }
+}
+
+extension UnsignedInteger {
     
     /**
      Encode a 64 bit unsigned integer using variable-length encoding.
@@ -144,7 +190,7 @@ extension UnsignedInteger {
      - Throws: `BinaryDecodingError.missingData`
      - Returns: The decoded unsigned integer.
      */
-    public init(from byteProvider: DecodingDataProvider) throws {
+    init(from byteProvider: DecodingDataProvider) throws {
         let value = try UInt64.from(byteProvider)
         guard let result = Self.init(exactly: value) else {
             throw ProtobufDecodingError.variableLengthEncodedValueOutOfRange
@@ -154,7 +200,14 @@ extension UnsignedInteger {
 }
 
 extension UInt64 {
-    
+
+    /**
+     Extract a variable-length value from a container.
+     - Parameter byteProvider: The data container with the encoded data.
+     - Throws: `ProtobufDecodingError.invalidVarintEncoding` or
+     `ProtobufDecodingError.missingData`
+     - Returns: The decoded value.
+     */
     static func from(_ byteProvider: DecodingDataProvider) throws -> UInt64 {
         var result: UInt64 = 0
         

@@ -21,7 +21,7 @@ final class SingleValueDecodingNode: CodingPathNode, SingleValueDecodingContaine
         case let a as BinaryDecodable.Type:
             return try a.init(includingLengthFrom: dataProvider) as! T
         default:
-            fatalError()
+            throw ProtobufDecodingError.notImplemented("SingleValueContainer.decode(_)")
         }
     }
 }

@@ -1,14 +1,10 @@
 import Foundation
 
-public protocol ByteDecodable {
-
-    init(from byteProvider: DecodingDataProvider) throws
-}
 /**
- A protocol adopted by all types which can be converted to binary data.
+ A protocol adopted by all types which can be decoded from binary data.
  */
-public protocol BinaryDecodable: ByteDecodable, WireTypeProvider, Decodable {
-    
+protocol BinaryDecodable: ByteDecodable, WireTypeProvider, Decodable {
+
     static var defaultValue: Self { get }
 }
 
@@ -29,7 +25,7 @@ extension BinaryDecodable {
     }
 }
 
-public extension BinaryEncodable where Self: AdditiveArithmetic {
+extension BinaryEncodable where Self: AdditiveArithmetic {
 
     /**
      The default value for an integer (`zero`)

@@ -22,6 +22,6 @@ final class DictionaryDecodingNode: CodingPathNode, Decoder {
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("Dictionary.singleValueContainer()")
     }
 }

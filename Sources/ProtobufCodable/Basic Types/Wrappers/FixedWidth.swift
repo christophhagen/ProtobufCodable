@@ -2,28 +2,26 @@ import Foundation
 
 /**
  A wrapper for integer values which ensures that values are encoded in binary format using a fixed width.
- 
+
  Use the property wrapped within a `Codable` definition to enforce fixed-width encoding for a property:
- ```
+ ```swift
  struct MyStruct: Codable {
- 
+
      /// Always encoded as 4 bytes
      @FixedWidth var largeInteger: Int32
  }
  ```
+
+ By default, the `FixedWidth` property wrapper is supported for all integers (signed and unsigned), except for `Int8` and `UInt8` types.
+
+ - SeeAlso: [Laguage Guide (proto3): Scalar value types](https://developers.google.com/protocol-buffers/docs/proto3#scalar)
  */
 @propertyWrapper
-public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
-    WrappedValue: FixedWidthInteger,
-    WrappedValue: BinaryCodable,
-    WrappedValue: FixedLengthWireType,
-    WrappedValue: HostIndependentRepresentable {
-    
-    // MARK: Property wrapper
-    
+public struct FixedWidth<WrappedValue> where WrappedValue: FixedWidthCompatible {
+
     /// The value wrapped in the fixed-width container
     public var wrappedValue: WrappedValue
-    
+
     /**
      Wrap an integer value in a fixed-width container
      - Parameter wrappedValue: The integer to wrap
@@ -31,37 +29,54 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
     public init(wrappedValue: WrappedValue) {
         self.wrappedValue = wrappedValue
     }
-    
-    // MARK: BinaryEncodable
-    
-    /// The wrapped value is equal to the default value for the type.
-    public static var defaultValue: Self {
-        .init(wrappedValue: .defaultValue)
-    }
-    
+}
+
+extension FixedWidth: Equatable where WrappedValue: Equatable {
+
+}
+
+extension FixedWidth: BinaryEncodable where WrappedValue: BinaryEncodable, WrappedValue: HostIndependentRepresentable {
+
     /**
      Encode the wrapped value to binary data compatible with the protobuf encoding.
      - Returns: The binary data in host-independent format.
      */
-    public func binaryData() -> Data {
+    func binaryData() -> Data {
         wrappedValue.hostIndependentBinaryData
     }
-    
-    // MARK: WireTypeProvider
-    
+
+    var isDefaultValue: Bool {
+        wrappedValue.isDefaultValue
+    }
+}
+
+extension FixedWidth: WireTypeProvider {
+
     /// The wire type of the wrapped value.
     public static var wireType: WireType {
         WrappedValue.fixedLengthWireType
     }
-    
-    // MARK: BinaryDecodable
-    
-    public init(from byteProvider: DecodingDataProvider) throws {
+}
+
+extension FixedWidth: ByteDecodable where WrappedValue: BinaryDecodable, WrappedValue: HostIndependentRepresentable {
+
+}
+
+extension FixedWidth: BinaryDecodable where WrappedValue: BinaryDecodable, WrappedValue: HostIndependentRepresentable {
+
+    /// The wrapped value is equal to the default value for the type.
+    static var defaultValue: Self {
+        .init(wrappedValue: .defaultValue)
+    }
+
+    init(from byteProvider: DecodingDataProvider) throws {
         let wrappedValue = try WrappedValue(binaryData: byteProvider)
         self.init(wrappedValue: wrappedValue)
     }
-    
-    // MARK: Codable
+
+}
+
+extension FixedWidth: Encodable where WrappedValue: Encodable {
 
     /**
      Encode the wrapped value transparently to the given encoder.
@@ -72,7 +87,9 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
         var container = encoder.singleValueContainer()
         try container.encode(self)
     }
+}
 
+extension FixedWidth: Decodable where WrappedValue: Decodable {
     /**
      Decode a wrapped value from a decoder.
      - Parameter decoder: The decoder to use for decoding.
@@ -84,20 +101,19 @@ public struct FixedLength<WrappedValue>: BinaryCodable, Equatable where
     }
 }
 
-extension FixedLength where WrappedValue: AdditiveArithmetic {
+extension FixedWidth where WrappedValue: AdditiveArithmetic {
 
     /**
      The zero value.
 
      Zero is the identity element for addition. For any value, `x + .zero == x` and `.zero + x == x`.
-
      */
     static var zero: Self {
         .init(wrappedValue: .zero)
     }
 }
 
-extension FixedLength where WrappedValue: FixedWidthInteger {
+extension FixedWidth where WrappedValue: FixedWidthInteger {
 
     /// The maximum representable integer in this type.
     ///

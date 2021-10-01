@@ -12,5 +12,4 @@ func trace(file: StaticString = #file, line: Int = #line, function: StaticString
     } else {
         print("\(f)(\(line)):\(function)")
     }
-    
 }

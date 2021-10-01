@@ -1,5 +1,5 @@
 import XCTest
-import ProtobufCodable
+@testable import ProtobufCodable
 import SwiftProtobuf
 
 final class BasicMessageTests: XCTestCase {
@@ -9,8 +9,9 @@ final class BasicMessageTests: XCTestCase {
         let decoded = try ProtobufDecoder().decode(T.self, from: data)
         XCTAssertEqual(decoded, value)
         if decoded != value {
-            print(value)
-            print(data.bytes)
+            print("Value: \(value)")
+            print("Data: \(data.bytes)")
+            print("Decoded: \(decoded)")
         }
     }
 

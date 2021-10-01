@@ -1,22 +1,12 @@
 import Foundation
 
-private extension CodingKey {
-
-    func isEqual(to other: CodingKey) -> Bool {
-        if let ownInt = intValue, let otherInt = other.intValue {
-            return ownInt == otherInt
-        }
-        return stringValue == other.stringValue
-    }
-}
-
 final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
 
     var allKeys: [Key] {
-        fields.map { $0.key }
+        fields.compactMap { Key(key: $0.key) }
     }
 
-    private var fields = [(key: Key, data: FieldWithNilData)]()
+    private var fields = [(key: CodingKey, data: FieldWithNilData)]()
 
     init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
         super.init(path: path, key: key)
@@ -32,7 +22,7 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
      the process until no more bytes remain.
      */
     private func decodeAllFields(provider: DecodingDataProvider) throws {
-        var prevField: (key: Key, data: Data)?
+        var prevField: (key: CodingKey, data: Data)?
         while !provider.isAtEnd {
             let tag = try Tag(from: provider)
 
@@ -46,15 +36,12 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
                 // Only choice left is varint
                 data = try provider.extractVarint()
             }
-            guard let key = Key(intValue: tag.field) else {
-                fatalError()
-                continue
-            }
+            let key = tag.key
             guard let prev = prevField else {
                 prevField = (key, data)
                 continue
             }
-            guard prev.key.isEqual(to: NilCodingKey(codingKey: key)) else {
+            guard prev.key.isEqual(to: key.correspondingNilKey) else {
                 let fieldData: FieldWithNilData = (.init(data: prev.data), .empty)
                 fields.append((key: prev.key, data: fieldData))
                 prevField = (key, data)
@@ -74,19 +61,33 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
     // MARK: Decoding
 
     func contains(_ key: Key) -> Bool {
-        fatalError()
+        let nilKey = key.correspondingNilKey
+        return fields.contains { $0.key.isEqual(to: key) || $0.key.isEqual(to: nilKey) }
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
-        fatalError()
+        !contains(key)
+    }
+
+    private func getData(for key: Key) -> [FieldWithNilData] {
+        let nilKey = key.correspondingNilKey
+        return fields.compactMap {
+            if $0.key.isEqual(to: key) {
+                return $0.data
+            }
+            if $0.key.isEqual(to: nilKey) {
+                // Fields may exist where only nil data has been encoded
+                // In this case, use empty value data with the nil data
+                return (field: .empty, nilData: $0.data.field.getRemainingBytes())
+            }
+            return nil
+        }
     }
 
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
         let newPath = codingPath + [key]
         // Find all fields with the appropriate key and join them together
-        let all: [FieldWithNilData] = fields
-            .filter { $0.key.isEqual(to: key) }
-            .map { $0.data }
+        let all = getData(for: key)
 
         switch type {
         case let Primitive as BinaryDecodable.Type:
@@ -100,7 +101,6 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
                 return Dict.init() as! T
             }
             // Merge all fields together
-            #warning("Add length back to items in 'all'?")
             let decoder = DictionaryDecodingNode(path: newPath, key: key, userInfo: [:], data: all)
             return try .init(from: decoder)
         default:
@@ -115,18 +115,18 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.nestedContainer(keyedBy:forKey)")
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.nestedUnkeyedContainer(forKey:)")
     }
 
     func superDecoder() throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.superDecoder()")
     }
 
     func superDecoder(forKey key: Key) throws -> Decoder {
-        fatalError()
+        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.superDecoder(forKey:)")
     }
 }
