@@ -1,6 +1,6 @@
 # ProtobufCodable
 
-A binary encoder for Swift `Codable` types. Convert objects to binary data, which can be compliant with the [Google Protocol Buffer](https://developers.google.com/protocol-buffers) format for compatible data types. It can also encode additional types unsupported by Protobuf, such as optionals, single values, arrays, and dictionaries.
+A binary encoder for Swift `Codable` types. Convert objects to binary data, which can be compliant with the [Google Protocol Buffer](https://developers.google.com/protocol-buffers) format for compatible data types. It can also encode additional types unsupported by Protobuf, such as optionals, single values, arrays, sets, enums, and dictionaries.
 
 # Installation
 
@@ -52,7 +52,7 @@ let encoder = ProtobufEncoder()
 let data = try encoder.encode(message)
 ```
 
-It's also possible to encode single values, arrays, optionals, and dictionaries, so long as they conform to `Codable`.
+It's also possible to encode single values, arrays, optionals, sets, enums, and dictionaries, so long as they conform to `Codable`.
 
 ## Decoding
 
