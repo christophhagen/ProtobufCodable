@@ -115,7 +115,10 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.nestedContainer(keyedBy:forKey)")
+        // Find all fields with the appropriate key and join them together
+        let all = getData(for: key)
+        let container = try KeyedContainerDecodingNode<NestedKey>(path: codingPath + [key], key: key, data: all)
+        return KeyedDecodingContainer(container)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {

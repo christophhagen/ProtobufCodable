@@ -106,4 +106,47 @@ final class ProtobufCodableTests: XCTestCase {
         let t = Test.a
         try roundTrip(t)
     }
+    
+    func testIntEnum() throws {
+
+        enum Test: Int, Codable {
+            case a = 123
+        }
+
+        let t = Test.a
+        try roundTrip(t)
+    }
+    
+    func testNestedEnum() throws {
+        
+        struct Test: Codable, Equatable {
+            
+            let a: TestEnum
+            
+            enum TestEnum: Codable {
+                case one
+                case two
+            }
+        }
+        
+        let t = Test(a: .two)
+        try roundTrip(t)
+    }
+    
+    func testSet() throws {
+        
+        let test: Set<Int> = [1,2,3,4,5]
+        try roundTrip(test)
+    }
+    
+    func testNestedSet() throws {
+        
+        struct Test: Codable, Equatable {
+            
+            let a: Set<Int>
+        }
+        
+        let test = Test(a: [1,2,3,4,5])
+        try roundTrip(test)
+    }
 }
