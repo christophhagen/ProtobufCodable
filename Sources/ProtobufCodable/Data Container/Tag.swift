@@ -33,15 +33,11 @@ struct Tag: ByteDecodable {
             self.key = GenericCodingKey(field)
             return
         }
-        print("String key found, \(field) bytes")
         // For a string key, the field number signals the key length
         let keyData = try byteProvider.getNextBytes(field)
-        print("Key: \(keyData.bytes)")
         let stringKey = try String(from: .init(data: keyData))
-        print("Key: \(stringKey)")
         // The real wire type follows after the string
         let realWireType = try byteProvider.getTag().wireType
-        print("Wire type: \(realWireType)")
         self.wireType = realWireType
         self.key = GenericCodingKey(stringKey)
     }
@@ -56,7 +52,6 @@ struct Tag: ByteDecodable {
             let stringData = try key.stringValue.binaryData()
             let stringTag = createTag(field: stringData.count, wireType: .stringKey)
             let fieldTag = createTag(field: 0, wireType: wireType)
-            print("Field '\(key.stringValue)' (length \(stringData.count), tag: \(stringTag.bytes), field tag: \(fieldTag.bytes)")
             return stringTag + stringData + fieldTag
         }
         return createTag(field: field, wireType: wireType)
