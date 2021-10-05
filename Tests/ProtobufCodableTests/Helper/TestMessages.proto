@@ -73,3 +73,14 @@ message DictContainer {
 
     map<int64, string> intStringDict = 4;
 }
+
+message EnumContainer {
+    
+    enum TestEnum {
+        universal = 0;
+        other = 1;
+        third = 2;
+    }
+    
+    TestEnum intEnum = 1;
+}

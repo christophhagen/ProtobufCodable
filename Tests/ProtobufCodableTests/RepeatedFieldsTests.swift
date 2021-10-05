@@ -7,7 +7,7 @@ final class RepeatedFieldsTests: XCTestCase {
     func testRepeatedPrimitives() throws {
         let codable = Repeated(
             unsigneds: [123, .zero, 234567890])
-        try roundTrip(codable)
+        try roundTripProtobuf(codable)
     }
 
     func testRepeatedComplexObjects() throws {
@@ -61,7 +61,7 @@ final class RepeatedFieldsTests: XCTestCase {
                 BasicMessage(double: 3.14, int64: -1234567890, boolean: false),
                 BasicMessage(float: -3.14, signedFixedInt32: -1234)
             ])
-        try roundTrip(codable)
+        try roundTripProtobuf(codable)
     }
     
     func testMultipleRepeatedPrimitives() throws {
@@ -82,7 +82,7 @@ final class RepeatedFieldsTests: XCTestCase {
                 BasicMessage(double: 3.14, int64: -1234567890, boolean: false),
                 BasicMessage(float: -3.14, signedFixedInt32: -1234)
             ])
-        try roundTrip(codable)
+        try roundTripProtobuf(codable)
     }
 
     func testDecoding() throws {

@@ -46,46 +46,34 @@ private struct StringKeyContainer: Codable, Equatable {
 
 final class ProtobufCodableTests: XCTestCase {
 
-    private func roundTrip<T>(_ codable: T) throws where T: Codable, T: Equatable {
-        let data = try ProtobufEncoder().encode(codable)
-        print(data.bytes)
-        let decoded: T = try ProtobufDecoder().decode(from: data)
-
-        XCTAssertEqual(decoded, codable)
-        if decoded != codable {
-            print("Encoding: \(codable)")
-            print("Data: \(data.bytes)")
-        }
-    }
-
     func testNestedNilValues() throws {
         let intContainer = NilNestedContainer(integer: 123, string: nil, array: [])
-        try roundTrip(intContainer)
+        try roundTripCodable(intContainer)
 
         let stringContainer = NilNestedContainer(integer: nil, string: "Some", array: [])
-        try roundTrip(stringContainer)
+        try roundTripCodable(stringContainer)
 
         let arrayContainer = NilNestedContainer(
             integer: nil, string: nil, array: [nil, true, nil, nil, false, nil])
-        try roundTrip(arrayContainer)
+        try roundTripCodable(arrayContainer)
 
         let arrayContainerWithNil = NilNestedContainer(
             integer: nil, string: nil, array: [nil])
-        try roundTrip(arrayContainerWithNil)
+        try roundTripCodable(arrayContainerWithNil)
     }
 
     func testNestedOptionalArrays() throws {
         let empty = NilArrayContainer(integer: 123, array: [])
-        try roundTrip(empty)
+        try roundTripCodable(empty)
 
         let nilArray = NilArrayContainer(integer: 123, array: nil)
-        try roundTrip(nilArray)
+        try roundTripCodable(nilArray)
 
         let arrayWithNil = NilArrayContainer(integer: 123, array: [nil])
-        try roundTrip(arrayWithNil)
+        try roundTripCodable(arrayWithNil)
 
         let arrayWithNil2 = NilArrayContainer(integer: 123, array: [nil, true])
-        try roundTrip(arrayWithNil2)
+        try roundTripCodable(arrayWithNil2)
     }
 
     func testStringKeys() throws {
@@ -94,7 +82,7 @@ final class ProtobufCodableTests: XCTestCase {
             bcd: "Some",
             cde: StringKeyContainer.Nested(def: 123, efg: true))
 
-        try roundTrip(container)
+        try roundTripCodable(container)
     }
 
     func testEnum() throws {
@@ -104,7 +92,7 @@ final class ProtobufCodableTests: XCTestCase {
         }
 
         let t = Test.a
-        try roundTrip(t)
+        try roundTripCodable(t)
     }
     
     func testIntEnum() throws {
@@ -114,7 +102,7 @@ final class ProtobufCodableTests: XCTestCase {
         }
 
         let t = Test.a
-        try roundTrip(t)
+        try roundTripCodable(t)
     }
     
     func testNestedEnum() throws {
@@ -130,13 +118,13 @@ final class ProtobufCodableTests: XCTestCase {
         }
         
         let t = Test(a: .two)
-        try roundTrip(t)
+        try roundTripCodable(t)
     }
     
     func testSet() throws {
         
         let test: Set<Int> = [1,2,3,4,5]
-        try roundTrip(test)
+        try roundTripCodable(test)
     }
     
     func testNestedSet() throws {
@@ -147,6 +135,6 @@ final class ProtobufCodableTests: XCTestCase {
         }
         
         let test = Test(a: [1,2,3,4,5])
-        try roundTrip(test)
+        try roundTripCodable(test)
     }
 }
