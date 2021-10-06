@@ -4,12 +4,12 @@ final class SingleValueDecoder: CodingPathNode, SingleValueDecodingContainer {
 
     private let dataProvider: DecodingDataProvider
 
-    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) {
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) {
         // Select the last data object
         // All previous values are discarded,
         // because the container should only ever contain a single value
         self.dataProvider = data.last?.field ?? .init(data: .empty)
-        super.init(path: path, key: key)
+        super.init(path: path, key: key, info: info)
     }
     
     func decodeNil() -> Bool {

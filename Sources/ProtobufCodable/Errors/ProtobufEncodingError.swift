@@ -27,4 +27,9 @@ public enum ProtobufEncodingError: Error {
      The associated string contains the invalid string.
      */
     case stringNotRepresentableInUTF8(_ failingString: String)
+    
+    /**
+     The encoded object was non compatible with the Protobuf Format, and the `requireProtobufCompatibility` option was enabled.
+     */
+    case notProtobufCompatible
 }

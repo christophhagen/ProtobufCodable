@@ -31,6 +31,8 @@ import Foundation
  */
 public struct ProtobufEncoder {
 
+    // MARK: Encoding options
+    
     /// The user info key for omitting default values
     static let omitDefaultKey: CodingUserInfoKey = .init(rawValue: "omitDefaults")!
 
@@ -40,8 +42,6 @@ public struct ProtobufEncoder {
     /// The user info key when enforcing the use of integer keys
     static let forceIntegersKey: CodingUserInfoKey = .init(rawValue: "forceIntegers")!
 
-    // MARK: Encoding options
-    
     /**
      Prevent default values (like `zero`) from being written to binary data.
      
@@ -64,9 +64,19 @@ public struct ProtobufEncoder {
      Encoding non-compliant objects will result in a ``ProtobufEncodingError.missingIntegerCodingKey``
      */
     var requireIntegerCodingKeys = false
+    
+    /**
+     Fail if any components are present in the encoded object which are not compatible to Google Protobuf.
+     
+     Failures will result in a ``ProtobufEncodingError.notProtobufCompatible``
+     */
+    var requireProtobufCompatibility = false
 
+    /// The user info to pass to all nodes
     var userInfo: [CodingUserInfoKey : Any] {
-        [Self.omitDefaultKey : omitDefaultValues, Self.hashStringKey : hashStringKeys]
+        [Self.omitDefaultKey : omitDefaultValues,
+         Self.hashStringKey : hashStringKeys,
+         Self.forceIntegersKey : requireIntegerCodingKeys]
     }
 
     // MARK: Creating an encoder
@@ -87,11 +97,11 @@ public struct ProtobufEncoder {
      */
     public func encode(_ value: Encodable) throws -> Data {
         if value is Dictionary<AnyHashable, Any> {
-            let encoder = DictionaryEncoder(path: [], key: nil, userInfo: userInfo)
+            let encoder = DictionaryEncoder(path: [], key: nil, info: userInfo)
             try value.encode(to: encoder)
             return try encoder.encodedData()
         } else {
-            let encoder = TopLevelEncoder(path: [], key: nil, userInfo: userInfo)
+            let encoder = TopLevelEncoder(path: [], key: nil, info: userInfo)
             try value.encode(to: encoder)
             return try encoder.encodedData()
         }

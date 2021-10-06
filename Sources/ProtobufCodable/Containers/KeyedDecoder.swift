@@ -8,8 +8,8 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
 
     private var fields = [(key: CodingKey, data: FieldWithNilData)]()
 
-    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
-        super.init(path: path, key: key)
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
+        super.init(path: path, key: key, info: info)
         for (provider, _) in data {
             try decodeAllFields(provider: provider)
         }
@@ -101,14 +101,14 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
                 return Dict.init() as! T
             }
             // Merge all fields together
-            let decoder = DictionaryDecoder(path: newPath, key: key, userInfo: [:], data: all)
+            let decoder = DictionaryDecoder(path: newPath, key: key, info: userInfo, data: all)
             return try .init(from: decoder)
         default:
             // Get nil fields if it exists
             let decoder = TopLevelDecoder(
                 path: newPath,
                 key: key,
-                info: [:],
+                info: userInfo,
                 data: all)
             return try T.init(from: decoder)
         }
@@ -117,7 +117,7 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         // Find all fields with the appropriate key and join them together
         let all = getData(for: key)
-        let container = try KeyedDecoder<NestedKey>(path: codingPath + [key], key: key, data: all)
+        let container = try KeyedDecoder<NestedKey>(path: codingPath + [key], key: key, info: userInfo, data: all)
         return KeyedDecodingContainer(container)
     }
 

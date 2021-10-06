@@ -11,8 +11,8 @@ final class DictionaryKeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerP
 
     private var fields = [(key: Key, tag: Tag, value: Data)]()
 
-    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
-        super.init(path: path, key: key)
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
+        super.init(path: path, key: key, info: info)
         for (provider, _) in data {
             try decodeAllKeys(provider: provider)
         }
@@ -94,7 +94,7 @@ final class DictionaryKeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerP
             return try Primitive.init(encodedData: data) as! T
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecoder(path: codingPath + [key], key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath + [key], key: key, info: userInfo, data: [(provider, nil)])
             let value = try type.init(from: decoder)
             return value
         }

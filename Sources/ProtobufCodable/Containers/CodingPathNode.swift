@@ -16,14 +16,20 @@ class CodingPathNode {
      The path taken to reach the node within the value to encode/decode.
      */
     let codingPath: [CodingKey]
+    
+    /**
+     The user info for encoding and decoding
+     */
+    let userInfo: [CodingUserInfoKey: Any]
 
     /**
      Create a new node.
      - Parameter path: The coding path to the node, including the node's key.
      - Parameter key: The key associated with the node.
      */
-    init(path: [CodingKey], key: CodingKey?) {
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey: Any]) {
         self.codingPath = path
         self.key = key
+        self.userInfo = info
     }
 }

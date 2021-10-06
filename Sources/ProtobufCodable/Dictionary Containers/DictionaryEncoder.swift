@@ -5,14 +5,7 @@ import Foundation
  */
 final class DictionaryEncoder: CodingPathNode, Encoder {
 
-    let userInfo: [CodingUserInfoKey : Any]
-
     private var object: EncodedDataProvider?
-
-    init(path: [CodingKey], key: CodingKey?, userInfo: [CodingUserInfoKey : Any]) {
-        self.userInfo = userInfo
-        super.init(path: path, key: key)
-    }
 
     @discardableResult
     func set<T: EncodedDataProvider>(object: T) -> T {
@@ -22,18 +15,18 @@ final class DictionaryEncoder: CodingPathNode, Encoder {
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         // The coding path already includes the key, so it's not added again
-        let object = DictionaryKeyedEncoder<Key>(path: codingPath, key: key)
+        let object = DictionaryKeyedEncoder<Key>(path: codingPath, key: key, info: userInfo)
         set(object: object)
         return KeyedEncodingContainer(object)
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
         // The coding path already includes the key, so it's not added again
-        set(object: DictionaryUnkeyedEncoder(path: codingPath, key: key))
+        set(object: DictionaryUnkeyedEncoder(path: codingPath, key: key, info: userInfo))
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        set(object: ValueEncoder(path: codingPath, key: key))
+        set(object: ValueEncoder(path: codingPath, key: key, info: userInfo))
     }
 }
 

@@ -12,8 +12,8 @@ final class DictionaryUnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
 
     private var fields = [(tag: Tag, data: Data)]()
 
-    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
-        super.init(path: path, key: key)
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
+        super.init(path: path, key: key, info: info)
 
         for (provider, _) in data {
             try decodeAllKeyValuePairs(provider: provider)
@@ -70,13 +70,13 @@ final class DictionaryUnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
             } else {
                 provider = DecodingDataProvider(data: data)
             }
-            let decoder = TopLevelDecoder(path: codingPath, key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath, key: key, info: userInfo, data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecoder(path: codingPath, key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath, key: key, info: userInfo, data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value

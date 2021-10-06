@@ -67,7 +67,7 @@ final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
     }
 
     private func encodeChild(_ child: Encodable) throws {
-        let encoder = TopLevelEncoder(path: codingPath, key: key, userInfo: [:])
+        let encoder = TopLevelEncoder(path: codingPath, key: key, info: userInfo)
         try child.encode(to: encoder)
         self.objects.append(encoder)
         canPackFields = false
@@ -76,13 +76,13 @@ final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
     // MARK: Children
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key)
+        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
         self.objects.append(container)
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedEncoder(path: codingPath, key: key)
+        let container = UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
         self.objects.append(container)
         return container
     }

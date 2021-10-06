@@ -28,7 +28,7 @@ final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
         case let optionalValue as AnyOptional where optionalValue.isNil:
             return try NilContainer().encoded(withKey: key)
         default:
-            let encoder = TopLevelEncoder(path: codingPath + [key], key: key, userInfo: [:])
+            let encoder = TopLevelEncoder(path: codingPath + [key], key: key, info: userInfo)
             try value.encode(to: encoder)
             return try encoder.encodedData()
         }
@@ -54,13 +54,13 @@ final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key)
+        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
         self.objects.append(container)
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedEncoder(path: codingPath, key: key)
+        let container = UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
         self.objects.append(container)
         return container
     }

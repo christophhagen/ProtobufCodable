@@ -54,14 +54,14 @@ final class UnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
     /**
      Create a node to decode unkeyed values (e.g. arrays)
      */
-    init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) throws {
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
         // For an unkeyed container, treat each data container
         // separately and decode the nil indices for each
         self.data = try data.map { field, nilData in
             return try decodeField(field, nilData: nilData)
         }
 
-        super.init(path: path, key: key)
+        super.init(path: path, key: key, info: info)
         advanceToNextDataBlock()
     }
 
@@ -92,7 +92,7 @@ final class UnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
             let decoder = TopLevelDecoder(
                 path: codingPath,
                 key: nil,
-                info: [:],
+                info: userInfo,
                 data: [(field: provider, nilData: nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()

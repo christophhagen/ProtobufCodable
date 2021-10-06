@@ -32,6 +32,30 @@ public struct ProtobufDecoder {
      Creates a new, reusable binary decoder.
      */
     public init() { }
+    
+    // MARK: Options
+    
+    static let intOverflowKey = CodingUserInfoKey(rawValue: "integerOverflow")!
+    
+    enum IntegerOverflowDecodingStrategy {
+        
+        /// Throw an error, if a varint is too large/small to fit in the type
+        case fail
+        
+        /// If a varint is too large/too small, use `min`/`max` values of the type
+        case clamp
+        
+        /// If a varint is too large/small, overflow the type
+        case overflow
+    }
+    
+    var integerOverflowDecodingStrategy: IntegerOverflowDecodingStrategy = .fail
+    
+    var userInfo: [CodingUserInfoKey: Any] {
+        [Self.intOverflowKey : integerOverflowDecodingStrategy]
+    }
+    
+    // MARK: Decoding
 
     /**
      Returns a value of the type you specify, decoded from binary data.
@@ -45,10 +69,10 @@ public struct ProtobufDecoder {
     public func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
         let data: [FieldWithNilData] = [(.init(data: data), nil)]
         if type is AnyDictionary.Type {
-            let decoder = DictionaryDecoder(path: [], key: nil, userInfo: [:], data: data)
+            let decoder = DictionaryDecoder(path: [], key: nil, info: userInfo, data: data)
             return try .init(from: decoder)
         } else {
-            let decoder = TopLevelDecoder(path: [], key: nil, info: [:], data: data)
+            let decoder = TopLevelDecoder(path: [], key: nil, info: userInfo, data: data)
             return try .init(from: decoder)
         }
     }
