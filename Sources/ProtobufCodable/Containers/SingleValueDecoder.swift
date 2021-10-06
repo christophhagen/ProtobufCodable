@@ -1,8 +1,8 @@
 import Foundation
 
-final class SingleValueDecodingNode: CodingPathNode, SingleValueDecodingContainer {
+final class SingleValueDecoder: CodingPathNode, SingleValueDecodingContainer {
 
-    let dataProvider: DecodingDataProvider
+    private let dataProvider: DecodingDataProvider
 
     init(path: [CodingKey], key: CodingKey?, data: [FieldWithNilData]) {
         // Select the last data object

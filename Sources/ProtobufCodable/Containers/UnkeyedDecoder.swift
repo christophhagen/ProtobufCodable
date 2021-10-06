@@ -1,27 +1,5 @@
 import Foundation
 
-struct DataWithNilIndex {
-
-    let provider: DecodingDataProvider
-
-    var nilIndices: Set<Int>
-
-    var currentIndex: Int = 0
-
-    var isAtEnd: Bool {
-        provider.isAtEnd && nilIndices.isEmpty
-    }
-
-    var nextValueIsNil: Bool {
-        nilIndices.contains(currentIndex)
-    }
-
-    mutating func didDecodeValue() {
-        nilIndices.remove(currentIndex)
-        currentIndex += 1
-    }
-}
-
 private func decodeField(_ provider: DecodingDataProvider, nilData: Data?) throws -> DataWithNilIndex {
     let nilIndices: Set<Int>
     if let nilData = nilData {
@@ -43,7 +21,7 @@ private func decodeNilData(_ provider: DecodingDataProvider) throws -> Set<Int> 
     return Set(try (0..<nilCount).map { _ in try Int(from: provider) })
 }
 
-final class UnkeyedContainerDecodingNode: CodingPathNode, UnkeyedDecodingContainer {
+final class UnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
 
     let count: Int? = nil
 
@@ -111,7 +89,7 @@ final class UnkeyedContainerDecodingNode: CodingPathNode, UnkeyedDecodingContain
             return value as! T
         default:
             let provider = nextValueIsNil ? DecodingDataProvider(data: .empty) : provider
-            let decoder = TopLevelDecodingContainer(
+            let decoder = TopLevelDecoder(
                 path: codingPath,
                 key: nil,
                 info: [:],

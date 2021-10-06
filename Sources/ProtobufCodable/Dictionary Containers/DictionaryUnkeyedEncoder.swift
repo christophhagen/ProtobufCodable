@@ -1,6 +1,6 @@
 import Foundation
 
-final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingContainer {
+final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
 
     private enum DictCodingKey: Int, CodingKey {
         case key = 1
@@ -28,7 +28,7 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
         case let optionalValue as AnyOptional where optionalValue.isNil:
             return try NilContainer().encoded(withKey: key)
         default:
-            let encoder = TopLevelEncodingContainer(path: codingPath + [key], key: key, userInfo: [:])
+            let encoder = TopLevelEncoder(path: codingPath + [key], key: key, userInfo: [:])
             try value.encode(to: encoder)
             return try encoder.encodedData()
         }
@@ -54,13 +54,13 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
     }
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedContainerEncodingNode<NestedKey>(path: codingPath, key: key)
+        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key)
         self.objects.append(container)
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedContainerEncodingNode(path: codingPath, key: key)
+        let container = UnkeyedEncoder(path: codingPath, key: key)
         self.objects.append(container)
         return container
     }
@@ -72,7 +72,7 @@ final class DictionaryUnkeyedEncodingContainer: CodingPathNode, UnkeyedEncodingC
 
 // MARK: EncodedDataProvider
 
-extension DictionaryUnkeyedEncodingContainer: EncodedDataProvider {
+extension DictionaryUnkeyedEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
         try objects.reduce(.empty) { try $0 + $1.encodedData() }

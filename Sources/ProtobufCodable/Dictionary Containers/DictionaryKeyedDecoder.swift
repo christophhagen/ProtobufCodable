@@ -1,17 +1,9 @@
 import Foundation
 
-//struct DictionaryCodingKey: CodingKey {
-//
-//    let intValue: Int?
-//
-//    let stringValue: String
-//
-//    init(
-//}
 /**
  Decoding node used to decode dictionaries with integer or string keys.
  */
-final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
+final class DictionaryKeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
 
     var allKeys: [Key] {
         fields.map { $0.key }
@@ -102,7 +94,7 @@ final class DictionaryKeyedDecodingContainer<Key>: CodingPathNode, KeyedDecoding
             return try Primitive.init(encodedData: data) as! T
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecodingContainer(path: codingPath + [key], key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath + [key], key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             return value
         }

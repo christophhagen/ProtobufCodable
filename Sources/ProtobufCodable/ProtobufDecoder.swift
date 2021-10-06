@@ -45,10 +45,10 @@ public struct ProtobufDecoder {
     public func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
         let data: [FieldWithNilData] = [(.init(data: data), nil)]
         if type is AnyDictionary.Type {
-            let decoder = DictionaryDecodingNode(path: [], key: nil, userInfo: [:], data: data)
+            let decoder = DictionaryDecoder(path: [], key: nil, userInfo: [:], data: data)
             return try .init(from: decoder)
         } else {
-            let decoder = TopLevelDecodingContainer(path: [], key: nil, info: [:], data: data)
+            let decoder = TopLevelDecoder(path: [], key: nil, info: [:], data: data)
             return try .init(from: decoder)
         }
     }

@@ -1,6 +1,6 @@
 import Foundation
 
-final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
+final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol where Key: CodingKey {
 
     var allKeys: [Key] {
         fields.compactMap { Key(key: $0.key) }
@@ -101,11 +101,11 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
                 return Dict.init() as! T
             }
             // Merge all fields together
-            let decoder = DictionaryDecodingNode(path: newPath, key: key, userInfo: [:], data: all)
+            let decoder = DictionaryDecoder(path: newPath, key: key, userInfo: [:], data: all)
             return try .init(from: decoder)
         default:
             // Get nil fields if it exists
-            let decoder = TopLevelDecodingContainer(
+            let decoder = TopLevelDecoder(
                 path: newPath,
                 key: key,
                 info: [:],
@@ -117,7 +117,7 @@ final class KeyedContainerDecodingNode<Key>: CodingPathNode, KeyedDecodingContai
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         // Find all fields with the appropriate key and join them together
         let all = getData(for: key)
-        let container = try KeyedContainerDecodingNode<NestedKey>(path: codingPath + [key], key: key, data: all)
+        let container = try KeyedDecoder<NestedKey>(path: codingPath + [key], key: key, data: all)
         return KeyedDecodingContainer(container)
     }
 

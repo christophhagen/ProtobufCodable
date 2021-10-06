@@ -87,11 +87,11 @@ public struct ProtobufEncoder {
      */
     public func encode(_ value: Encodable) throws -> Data {
         if value is Dictionary<AnyHashable, Any> {
-            let encoder = DictionaryEncodingNode(path: [], key: nil, userInfo: userInfo)
+            let encoder = DictionaryEncoder(path: [], key: nil, userInfo: userInfo)
             try value.encode(to: encoder)
             return try encoder.encodedData()
         } else {
-            let encoder = TopLevelEncodingContainer(path: [], key: nil, userInfo: userInfo)
+            let encoder = TopLevelEncoder(path: [], key: nil, userInfo: userInfo)
             try value.encode(to: encoder)
             return try encoder.encodedData()
         }

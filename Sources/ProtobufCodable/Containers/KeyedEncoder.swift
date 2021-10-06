@@ -1,6 +1,6 @@
 import Foundation
 
-final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
+final class KeyedEncoder<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
 
     private var objects = [EncodedDataProvider]()
 
@@ -36,7 +36,7 @@ final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContai
      - Parameter key: The key to associate the value with.
      */
     private func encodeDictionary(_ dictionary: Encodable, forKey key: CodingKey) throws {
-        let encoder = DictionaryEncodingNode(path: [], key: key, userInfo: [:])
+        let encoder = DictionaryEncoder(path: [], key: key, userInfo: [:])
         try dictionary.encode(to: encoder)
         self.objects.append(encoder)
     }
@@ -48,7 +48,7 @@ final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContai
      - Parameter key: The key to associate the value with.
      */
     private func encodeChild(_ child: Encodable, forKey key: CodingKey) throws {
-        let encoder = TopLevelEncodingContainer(path: codingPath + [key], key: key, userInfo: [:])
+        let encoder = TopLevelEncoder(path: codingPath + [key], key: key, userInfo: [:])
         try child.encode(to: encoder)
         self.objects.append(encoder)
     }
@@ -56,13 +56,13 @@ final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContai
     // MARK: Nesting
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedContainerEncodingNode<NestedKey>(path: codingPath + [key], key: key)
+        let container = KeyedEncoder<NestedKey>(path: codingPath + [key], key: key)
         self.objects.append(container)
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        let container = UnkeyedContainerEncodingNode(path: codingPath + [key], key: key)
+        let container = UnkeyedEncoder(path: codingPath + [key], key: key)
         self.objects.append(container)
         return container
     }
@@ -78,7 +78,7 @@ final class KeyedContainerEncodingNode<Key>: CodingPathNode, KeyedEncodingContai
 
 // MARK: EncodedDataProvider
 
-extension KeyedContainerEncodingNode: EncodedDataProvider {
+extension KeyedEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
         let data = try objects.reduce(.empty) { try $0 + $1.encodedData() }

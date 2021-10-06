@@ -1,8 +1,8 @@
 import Foundation
 
-final class TopLevelEncodingContainer: CodingPathNode, Encoder {
+final class TopLevelEncoder: CodingPathNode, Encoder {
 
-    var userInfo: [CodingUserInfoKey : Any]
+    let userInfo: [CodingUserInfoKey : Any]
     
     private var object: EncodedDataProvider?
 
@@ -18,21 +18,21 @@ final class TopLevelEncodingContainer: CodingPathNode, Encoder {
     }
     
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let object = KeyedContainerEncodingNode<Key>(path: codingPath, key: key)
+        let object = KeyedEncoder<Key>(path: codingPath, key: key)
         set(object: object)
         return KeyedEncodingContainer(object)
     }
     
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        set(object: UnkeyedContainerEncodingNode(path: codingPath, key: key))
+        set(object: UnkeyedEncoder(path: codingPath, key: key))
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        set(object: SingleValueEncodingNode(path: codingPath, key: key))
+        set(object: ValueEncoder(path: codingPath, key: key))
     }
 }
 
-extension TopLevelEncodingContainer: EncodedDataProvider {
+extension TopLevelEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
         try object?.encodedData() ?? .empty

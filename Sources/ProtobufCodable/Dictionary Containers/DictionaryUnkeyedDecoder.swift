@@ -1,6 +1,6 @@
 import Foundation
 
-final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingContainer {
+final class DictionaryUnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
 
     var count: Int?
 
@@ -70,13 +70,13 @@ final class DictionaryUnkeyedDecodingContainer: CodingPathNode, UnkeyedDecodingC
             } else {
                 provider = DecodingDataProvider(data: data)
             }
-            let decoder = TopLevelDecodingContainer(path: codingPath, key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath, key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value
         default:
             let provider = DecodingDataProvider(data: data)
-            let decoder = TopLevelDecodingContainer(path: codingPath, key: key, info: [:], data: [(provider, nil)])
+            let decoder = TopLevelDecoder(path: codingPath, key: key, info: [:], data: [(provider, nil)])
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value

@@ -1,6 +1,6 @@
 import Foundation
 
-final class DictionaryDecodingNode: CodingPathNode, Decoder {
+final class DictionaryDecoder: CodingPathNode, Decoder {
 
     let userInfo: [CodingUserInfoKey : Any]
 
@@ -13,12 +13,12 @@ final class DictionaryDecodingNode: CodingPathNode, Decoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        let container = try DictionaryKeyedDecodingContainer<Key>(path: codingPath, key: key, data: data)
+        let container = try DictionaryKeyedDecoder<Key>(path: codingPath, key: key, data: data)
         return KeyedDecodingContainer<Key>(container)
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        try DictionaryUnkeyedDecodingContainer(path: codingPath, key: key, data: data)
+        try DictionaryUnkeyedDecoder(path: codingPath, key: key, data: data)
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {

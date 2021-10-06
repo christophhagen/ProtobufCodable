@@ -1,6 +1,6 @@
 import Foundation
 
-final class SingleValueEncodingNode: CodingPathNode, SingleValueEncodingContainer {
+final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
     
     private var data: Data?
     
@@ -39,14 +39,14 @@ final class SingleValueEncodingNode: CodingPathNode, SingleValueEncodingContaine
     }
 }
 
-extension SingleValueEncodingNode: EncodedDataProvider {
+extension ValueEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
         data ?? .empty
     }
 }
 
-extension SingleValueEncodingNode: CustomStringConvertible {
+extension ValueEncoder: CustomStringConvertible {
     
     var description: String {
         encodedTypeInfo ?? "\(type(of: self))"

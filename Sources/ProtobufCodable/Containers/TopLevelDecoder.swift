@@ -2,7 +2,7 @@ import Foundation
 
 typealias FieldWithNilData = (field: DecodingDataProvider, nilData: Data?)
 
-final class TopLevelDecodingContainer: CodingPathNode, Decoder {
+final class TopLevelDecoder: CodingPathNode, Decoder {
 
     let userInfo: [CodingUserInfoKey : Any]
     
@@ -15,15 +15,15 @@ final class TopLevelDecodingContainer: CodingPathNode, Decoder {
     }
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        let container = try KeyedContainerDecodingNode<Key>(path: codingPath, key: key, data: data)
+        let container = try KeyedDecoder<Key>(path: codingPath, key: key, data: data)
         return KeyedDecodingContainer<Key>(container)
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        try UnkeyedContainerDecodingNode(path: codingPath, key: key, data: data)
+        try UnkeyedDecoder(path: codingPath, key: key, data: data)
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        SingleValueDecodingNode(path: codingPath, key: key, data: data)
+        SingleValueDecoder(path: codingPath, key: key, data: data)
     }
 }
