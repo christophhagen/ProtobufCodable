@@ -8,6 +8,11 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
 
     private var fields = [(key: CodingKey, data: FieldWithNilData)]()
 
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], fields: [(key: CodingKey, data: FieldWithNilData)]) throws {
+        self.fields = fields
+        super.init(path: path, key: key, info: info)
+    }
+
     init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
         super.init(path: path, key: key, info: info)
         for (provider, _) in data {
@@ -71,6 +76,9 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
 
     private func getData(for key: Key) -> [FieldWithNilData] {
         let nilKey = key.correspondingNilKey
+        defer {
+            fields = fields.filter { !$0.key.isEqual(to: key) && !$0.key.isEqual(to: nilKey)  }
+        }
         return fields.compactMap {
             if $0.key.isEqual(to: key) {
                 return $0.data
@@ -122,14 +130,16 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.nestedUnkeyedContainer(forKey:)")
+        let all = getData(for: key)
+        return try UnkeyedDecoder(path: codingPath, key: key, info: userInfo, data: all)
     }
 
     func superDecoder() throws -> Decoder {
-        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.superDecoder()")
+        return TopLevelDecoder(path: codingPath, key: key, info: userInfo, fields: fields)
     }
 
     func superDecoder(forKey key: Key) throws -> Decoder {
-        throw ProtobufDecodingError.notImplemented("KeyedDecodingContainer.superDecoder(forKey:)")
+        let all = getData(for: key)
+        return TopLevelDecoder(path: codingPath, key: key, info: userInfo, data: all)
     }
 }

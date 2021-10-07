@@ -68,11 +68,15 @@ final class KeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol whe
     }
 
     func superEncoder() -> Encoder {
-        fatalError()
+        addObject {
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        }
     }
 
     func superEncoder(forKey key: Key) -> Encoder {
-        fatalError()
+        addObject {
+            TopLevelEncoder(path: codingPath + [key], key: key, info: userInfo)
+        }
     }
 }
 

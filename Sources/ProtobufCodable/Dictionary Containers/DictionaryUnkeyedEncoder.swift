@@ -69,7 +69,11 @@ final class DictionaryUnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
     }
 
     func superEncoder() -> Encoder {
-        fatalError()
+        // This should never be executed, since the dictionaries which use this
+        // class are created by the Codable implementation.
+        addObject  {
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        }
     }
 }
 

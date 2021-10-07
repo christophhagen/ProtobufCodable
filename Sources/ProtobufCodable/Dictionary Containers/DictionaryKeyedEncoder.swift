@@ -58,11 +58,21 @@ final class DictionaryKeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerPr
     }
 
     func superEncoder() -> Encoder {
+        // This should never be executed, since the dictionaries which use this
+        // class are created by the Codable implementation.
+        // There is currently no way to encode super (and I'm not sure
+        // that it even makes sense in this context) and we can't throw an error
+        // so we just crash.
         fatalError()
     }
 
     func superEncoder(forKey key: Key) -> Encoder {
-        fatalError()
+        // This should never be executed, since the dictionaries which use this
+        // class are created by the Codable implementation.
+        // It's here just in case
+        addObject {
+            TopLevelEncoder(path: codingPath + [key], key: key, info: userInfo)
+        }
     }
 }
 
