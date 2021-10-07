@@ -1,12 +1,27 @@
 import Foundation
 
-final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
+private struct PrimitiveContainer: EncodedDataProvider {
+
+    let primitive: BinaryEncodable
+
+    init(_ primitive: BinaryEncodable) {
+        self.primitive = primitive
+    }
+
+    func encodedData() throws -> Data {
+        try primitive.encodedWithLengthIfNeeded()
+    }
+
+    func encodedDataWithKeys(_ key: CodingKey) throws -> Data {
+        try primitive.encoded(withKey: key)
+    }
+}
+
+final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
 
     private(set) var count: Int = 0
 
     private var nilIncides = Set<Int>()
-
-    private var objects = [EncodedDataProvider]()
 
     /**
      Indicate if the repeated values can be "packed".
@@ -35,6 +50,10 @@ final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
         try! Data([0]).encoded(withKey: key.correspondingNilKey)
     }
 
+    func valueData() throws -> Data {
+        try objects.reduce(.empty) { try $0 + $1.encodedData() }
+    }
+
     private func nilData(for key: CodingKey) throws -> Data {
         guard !nilIncides.isEmpty else {
             return .empty
@@ -59,32 +78,35 @@ final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
     }
 
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        let data = try primitive.encodedWithLengthIfNeeded()
-        self.objects.append(data)
+        addObject {
+            PrimitiveContainer(primitive)
+        }
         if primitive.wireType == .lengthDelimited {
             canPackFields = false
         }
     }
 
     private func encodeChild(_ child: Encodable) throws {
-        let encoder = TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        let encoder = addObject {
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        }
         try child.encode(to: encoder)
-        self.objects.append(encoder)
         canPackFields = false
     }
 
     // MARK: Children
 
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
-        self.objects.append(container)
+        let container = addObject {
+            KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
+        }
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
-        self.objects.append(container)
-        return container
+        addObject {
+            UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
+        }
     }
 
     func superEncoder() -> Encoder {
@@ -97,9 +119,8 @@ final class UnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
 extension UnkeyedEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
-        let valueData = try objects.reduce(.empty) { try $0 + $1.encodedData() }
         guard let key = key else {
-            return nilEncodingData + valueData
+            return try nilEncodingData + valueData()
         }
         if objects.isEmpty && nilIncides.isEmpty {
             // An empty array of nil indices prevents an empty array from decoding as `nil`
@@ -108,8 +129,9 @@ extension UnkeyedEncoder: EncodedDataProvider {
         let nilData = try self.nilData(for: key)
         guard canPackFields else {
             // Encoding of unpacked fields already includes key and tag information
-            return nilData + valueData
+            return try nilData + objects.reduce(.empty) { try $0 + $1.encodedDataWithKeys(key) }
         }
+        let valueData = try valueData()
         guard !valueData.isEmpty else {
             return nilData
         }

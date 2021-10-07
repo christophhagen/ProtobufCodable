@@ -154,4 +154,21 @@ final class RepeatedFieldsTests: XCTestCase {
 //        print(data[0..<max].bytes)
 //        print(data.bytes)
     }
+
+    func testRepeatedStrings() throws {
+        let codable = Repeated(
+            strings: ["some", "more", "third"])
+        try roundTripProtobuf(codable)
+//
+//        struct StringsContainer: Codable, Equatable {
+//            let strings: [String]
+//
+//            enum CodingKeys: Int, CodingKey {
+//                case strings = 1
+//            }
+//        }
+//
+//        let value = StringsContainer(strings: ["some", "more", "third"])
+//        try roundTripCodable(value)
+    }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
+final class DictionaryUnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
 
     private enum DictCodingKey: Int, CodingKey {
         case key = 1
@@ -15,7 +15,7 @@ final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
         keyData == nil
     }
 
-    private var objects = [EncodedDataProvider]()
+    // MARK: Encoding
 
     func encodeNil() throws {
         throw ProtobufEncodingError.notImplemented("Dictionary.UnkeyedEncodingContainer.encodeNil()")
@@ -48,21 +48,24 @@ final class DictionaryUnkeyedEncoder: CodingPathNode, UnkeyedEncodingContainer {
         } else {
             data = try keyValuePairData.binaryData()
         }
-        self.objects.append(data)
+        addObject { data }
         self.keyData = nil
         count += 1
     }
 
+    // MARK: Nested containers
+
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
-        self.objects.append(container)
+        let container = addObject {
+            KeyedEncoder<NestedKey>(path: codingPath, key: key, info: userInfo)
+        }
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
-        self.objects.append(container)
-        return container
+        addObject {
+            UnkeyedEncoder(path: codingPath, key: key, info: userInfo)
+        }
     }
 
     func superEncoder() -> Encoder {

@@ -3,9 +3,9 @@ import Foundation
 /**
  A dictionary encoding node for cases where the dictionary keys are either integers or strings.
  */
-final class DictionaryKeyedEncoder<Key>: CodingPathNode, KeyedEncodingContainerProtocol where Key: CodingKey {
+final class DictionaryKeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol where Key: CodingKey {
 
-    private var objects = [EncodedDataProvider]()
+    // MARK: Encoding
 
     func encodeNil(forKey key: Key) throws {
         throw ProtobufEncodingError.notImplemented("Dictionary.KeyedEncodingContainer.encodeNil(forKey:)")
@@ -36,21 +36,25 @@ final class DictionaryKeyedEncoder<Key>: CodingPathNode, KeyedEncodingContainerP
     }
 
     private func encode(keyPair: Encodable) throws {
-        let encoder = TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        let encoder = addObject {
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        }
         try keyPair.encode(to: encoder)
-        self.objects.append(encoder)
     }
 
+    // MARK: Nested containers
+
     func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
-        let container = KeyedEncoder<NestedKey>(path: codingPath + [key], key: key, info: userInfo)
-        self.objects.append(container)
+        let container = addObject {
+            KeyedEncoder<NestedKey>(path: codingPath + [key], key: key, info: userInfo)
+        }
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        let container = UnkeyedEncoder(path: codingPath + [key], key: key, info: userInfo)
-        self.objects.append(container)
-        return container
+        addObject {
+            UnkeyedEncoder(path: codingPath + [key], key: key, info: userInfo)
+        }
     }
 
     func superEncoder() -> Encoder {

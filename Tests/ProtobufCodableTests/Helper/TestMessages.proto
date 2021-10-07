@@ -61,6 +61,8 @@ message Repeated {
     repeated uint32 unsigneds = 1;
     
     repeated BasicMessage messages = 2;
+
+    repeated string strings = 3;
 }
 
 message DictContainer {
