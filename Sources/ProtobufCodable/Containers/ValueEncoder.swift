@@ -6,10 +6,6 @@ final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
     
     private var encodedTypeInfo: String?
 
-    var encodesNil: Bool {
-        data == nil
-    }
-    
     func encodeNil() throws {
         self.data = nil
         self.encodedTypeInfo = "nil"

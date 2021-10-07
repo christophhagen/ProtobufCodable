@@ -1,6 +1,6 @@
 import Foundation
 
-final class SingleValueDecoder: CodingPathNode, SingleValueDecodingContainer {
+final class ValueDecoder: CodingPathNode, SingleValueDecodingContainer {
 
     private let dataProvider: DecodingDataProvider
 

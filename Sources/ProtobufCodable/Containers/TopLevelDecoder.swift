@@ -21,6 +21,6 @@ final class TopLevelDecoder: CodingPathNode, Decoder {
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        SingleValueDecoder(path: codingPath, key: key, info: userInfo, data: data)
+        ValueDecoder(path: codingPath, key: key, info: userInfo, data: data)
     }
 }
