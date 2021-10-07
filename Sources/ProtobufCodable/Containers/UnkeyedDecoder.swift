@@ -84,9 +84,19 @@ final class UnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
         let provider = current!.provider
         switch type {
         case let Primitive as BinaryDecodable.Type:
-            let value = try Primitive.init(includingLengthFrom: provider)
-            didDecodeValue()
-            return value as! T
+            if self.key == nil {
+                // If no key exists, then the length values are not stripped from the
+                // data during the decoding step, so it needs to be considered
+                let value = try Primitive.init(includingLengthFrom: provider)
+                didDecodeValue()
+                return value as! T
+            } else {
+                // For an existing key, the values are either split into different providers
+                // (for complex types) or can be decoding without knowning the length
+                let value = try Primitive.init(from: provider)
+                didDecodeValue()
+                return value as! T
+            }
         default:
             let provider = nextValueIsNil ? DecodingDataProvider(data: .empty) : provider
             let decoder = TopLevelDecoder(
