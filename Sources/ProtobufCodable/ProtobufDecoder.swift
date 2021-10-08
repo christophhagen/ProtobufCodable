@@ -91,7 +91,7 @@ public struct ProtobufDecoder {
      - Returns: A value of the specified type, if the decoder can parse the data.
      - Throws: Errors of type `ProtobufDecodingError`
      */
-    static func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
+    public static func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
         let decoder = ProtobufDecoder()
         return try decoder.decode(from: data)
     }

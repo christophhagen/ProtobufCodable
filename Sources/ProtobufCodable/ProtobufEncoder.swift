@@ -123,4 +123,14 @@ public struct ProtobufEncoder {
             return try encoder.encodedData()
         }
     }
+
+    /**
+     Convert an `Encodable` type to binary data using a default encoder.
+     - Parameter value: The object to convert to data
+     - Returns: The binary data
+     - Throws: Errors of type `ProtobufEncodingError`
+     */
+    public static func encode(_ value: Encodable) throws -> Data {
+        try ProtobufEncoder().encode(value)
+    }
 }
