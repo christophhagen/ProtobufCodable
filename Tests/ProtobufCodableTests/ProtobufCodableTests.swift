@@ -137,4 +137,32 @@ final class ProtobufCodableTests: XCTestCase {
         let test = Test(a: [1,2,3,4,5])
         try roundTripCodable(test)
     }
+
+    private let rounds = 50000
+
+    let message = BasicMessage(
+        double: 3.14, float: 3.14, int32: 123, int64: 123,
+        unsignedInt32: 123, unsignedInt64: 123, signedInt32: 123, signedInt64: 123,
+        fixedInt32: 123, fixedInt64: 123, signedFixedInt32: 123, signedFixedInt64: 123,
+        boolean: true, string: "Some", bytes: Data([42, 42, 42]))
+
+    func testPerformanceCodable() throws {
+        var encoder = ProtobufEncoder()
+        encoder.omitDefaultValues = true
+
+        measure {
+            for _ in 0..<rounds {
+                let _ = try! encoder.encode(message)
+            }
+        }
+    }
+
+    func testPerformanceProtobuf() throws {
+        let message2 = message.protobuf
+        measure {
+            for _ in 0..<rounds {
+            let _ = try! message2.serializedData()
+            }
+        }
+    }
 }
