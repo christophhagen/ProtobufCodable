@@ -96,7 +96,19 @@ Using integer keys can significantly decrease the binary size, especially for lo
 
 ## Encoding Options
 
-There are currently no encoding options exposed publicly. Additional options may be added in the future.
+There is currently only one encoding option exposed publicly. Additional options may be added in the future.
+
+### Omit default values
+
+The Protobuf specification defines [default values](https://developers.google.com/protocol-buffers/docs/proto3#default) for different message types, which are assumed if an encoded message does not contain a particular singular element. This can reduce the binary size when often encoding default values within objects. `ProtobufEncoder` does **not** use this feature by default. This is because `ProtobufCodable` supports Swift's `Optional` values, which are decoded as `nil` if no data is present for the value. The `Codable` implementation does not allow the encoder to distinguish between optional and non-optional fields, so all default values are encoded by default. This still maintains full compatibility with Protobuf, since it doesn't have optional values (in the Swift sense), and default values which are present in binary data are decoded normally.
+
+If you want to gain the efficiency boost of omitted default values, specify the `omitDefaultValues` option for the encoder:
+```swift
+var encoder = ProtobufEncoder()
+encoder.omitDefaultValues = true
+```
+
+Note that this option should only be used for objects without `Optional` fields to maintain consistency: **Any default value within an optional field will be decoded as `nil` when specifying the `omitDefaultValues` option**
 
 # Protobuf Compatibility
 
