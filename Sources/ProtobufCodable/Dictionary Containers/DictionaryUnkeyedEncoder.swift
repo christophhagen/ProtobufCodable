@@ -24,9 +24,9 @@ final class DictionaryUnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
     private func encode<T>(_ value: T, forKey key: DictCodingKey) throws -> Data where T: Encodable {
         switch value {
         case let primitive as BinaryEncodable:
-            return try primitive.encoded(withKey: key)
+            return try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
         case let optionalValue as AnyOptional where optionalValue.isNil:
-            return try NilContainer().encoded(withKey: key)
+            return try NilContainer().encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
         default:
             let encoder = TopLevelEncoder(path: codingPath + [key], key: key, info: userInfo)
             try value.encode(to: encoder)
@@ -44,7 +44,7 @@ final class DictionaryUnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
 
         let data: Data
         if let key = self.key {
-            data = try keyValuePairData.encoded(withKey: key)
+            data = try keyValuePairData.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
         } else {
             data = try keyValuePairData.binaryData()
         }

@@ -1,22 +1,31 @@
 import Foundation
 
-private struct PrimitiveContainer: EncodedDataProvider {
+/**
+ A simple wrapper for primitive values so that they can be encoded in an unkeyed container.
+ */
+private struct PrimitiveContainer {
 
     let primitive: BinaryEncodable
 
     init(_ primitive: BinaryEncodable) {
         self.primitive = primitive
     }
+}
+
+extension PrimitiveContainer: EncodedDataProvider {
 
     func encodedData() throws -> Data {
         try primitive.encodedWithLengthIfNeeded()
     }
 
-    func encodedDataWithKeys(_ key: CodingKey) throws -> Data {
-        try primitive.encoded(withKey: key)
+    func encodedDataWithKeys(_ key: CodingKey, requireIntegerKey: Bool) throws -> Data {
+        try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerKey)
     }
 }
 
+/**
+ A container for unkeyed values, like arrays and sets.
+ */
 final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
 
     private(set) var count: Int = 0
@@ -47,7 +56,7 @@ final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
      */
     func emptyNilData(for key: CodingKey) -> Data {
         // Never throws since only `binaryData()` for `Data` is called
-        try! Data([0]).encoded(withKey: key.correspondingNilKey)
+        try! Data([0]).encoded(withKey: key.correspondingNilKey, requireIntegerKey: requireIntegerCodingKeys)
     }
 
     func valueData() throws -> Data {
@@ -58,7 +67,7 @@ final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
         if nilIncides.isEmpty {
             return .empty
         }
-        return try nilEncodingData.encoded(withKey: key.correspondingNilKey)
+        return try nilEncodingData.encoded(withKey: key.correspondingNilKey, requireIntegerKey: requireIntegerCodingKeys)
     }
 
     func encodeNil() throws {
@@ -130,12 +139,14 @@ extension UnkeyedEncoder: EncodedDataProvider {
         let nilData = try self.nilData(for: key)
         guard canPackFields else {
             // Encoding of unpacked fields already includes key and tag information
-            return try nilData + objects.reduce(.empty) { try $0 + $1.encodedDataWithKeys(key) }
+            return try nilData + objects.reduce(.empty) {
+                try $0 + $1.encodedDataWithKeys(key, requireIntegerKey: requireIntegerCodingKeys)
+            }
         }
         let valueData = try valueData()
         guard !valueData.isEmpty else {
             return nilData
         }
-        return try nilData + valueData.encoded(withKey: key)
+        return try nilData + valueData.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
     }
 }

@@ -30,7 +30,7 @@ struct Tag: ByteDecodable {
         let (field, wireType) = try byteProvider.getTag()
         guard wireType == .stringKey else {
             self.wireType = wireType
-            self.key = GenericCodingKey(field)
+            self.key = IntegerCodingKey(field)
             return
         }
         // For a string key, the field number signals the key length
@@ -39,7 +39,7 @@ struct Tag: ByteDecodable {
         // The real wire type follows after the string
         let realWireType = try byteProvider.getTag().wireType
         self.wireType = realWireType
-        self.key = GenericCodingKey(stringKey)
+        self.key = StringCodingKey(stringKey)
     }
 
     /**
@@ -47,7 +47,7 @@ struct Tag: ByteDecodable {
 
      Each key in the streamed message is a `varint` with the value `(field_number << 3) | wire_type` – in other words, the last three bits of the number store the wire type. The definition of the tag/key encoding is available in the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure) documentation.
      */
-    func data() throws -> Data {
+    func data(requireIntegerKey: Bool) throws -> Data {
         guard let field = key.intValue else {
             let stringData = try key.stringValue.binaryData()
             let stringTag = createTag(field: stringData.count, wireType: .stringKey)
@@ -55,10 +55,6 @@ struct Tag: ByteDecodable {
             return stringTag + stringData + fieldTag
         }
         return createTag(field: field, wireType: wireType)
-    }
-
-    var nilKey: GenericCodingKey {
-        key.correspondingNilKey
     }
 
     var dictionaryKey: KeyValueCodingKey? {

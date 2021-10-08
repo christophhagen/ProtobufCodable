@@ -33,7 +33,10 @@ extension CodingKey {
 
      The nil key is used to encode information about optional values within keyed containers.
      */
-    var correspondingNilKey: GenericCodingKey {
-        .init(convertingToNilKey: self)
+    var correspondingNilKey: CodingKey {
+        if let int = intValue {
+            return IntegerCodingKey(asNilKey: int)
+        }
+        return StringCodingKey(asNilKey: stringValue)
     }
 }

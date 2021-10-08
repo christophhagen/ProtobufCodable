@@ -7,12 +7,12 @@ protocol EncodedDataProvider {
 
     func encodedData() throws -> Data
 
-    func encodedDataWithKeys(_ key: CodingKey) throws -> Data
+    func encodedDataWithKeys(_ key: CodingKey, requireIntegerKey: Bool) throws -> Data
 }
 
 extension EncodedDataProvider {
 
-    func encodedDataWithKeys(_ key: CodingKey) throws -> Data {
+    func encodedDataWithKeys(_ key: CodingKey, requireIntegerKey: Bool) throws -> Data {
         try encodedData()
     }
 }

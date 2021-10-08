@@ -76,4 +76,23 @@ public struct ProtobufDecoder {
             return try .init(from: decoder)
         }
     }
+
+    /**
+     Decode a value of a type from binary data.
+
+     This function is a convenience wrapper to decode, and is equivalent to:
+     ```swift
+        let decoder = ProtobufDecoder()
+        let value = try decoder.decode(MyType.self, from: data)
+     ```
+     Uses the default decoding options.
+     - Parameter type: The type of the value to decode from the supplied data.
+     - Parameter data: The binary data to decode.
+     - Returns: A value of the specified type, if the decoder can parse the data.
+     - Throws: Errors of type `ProtobufDecodingError`
+     */
+    static func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
+        let decoder = ProtobufDecoder()
+        return try decoder.decode(from: data)
+    }
 }

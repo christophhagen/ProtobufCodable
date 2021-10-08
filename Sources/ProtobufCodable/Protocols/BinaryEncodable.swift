@@ -36,8 +36,9 @@ extension BinaryEncodable {
      - Parameter key: The coding key to use for encoding.
      - Returns: The encoded data, with a tag and the length information prepended (if needed)
      */
-    func encoded(withKey key: CodingKey) throws -> Data {
-        try Tag(type: wireType, key: key).data() + encodedWithLengthIfNeeded()
+    func encoded(withKey key: CodingKey, requireIntegerKey: Bool) throws -> Data {
+        try Tag(type: wireType, key: key).data(requireIntegerKey: requireIntegerKey)
+        + encodedWithLengthIfNeeded()
     }
 
     /**

@@ -73,7 +73,7 @@ public struct ProtobufEncoder {
 
      Encoding non-compliant objects will result in a ``ProtobufEncodingError.missingIntegerCodingKey``
      */
-    var requireIntegerCodingKeys = false
+    public var requireIntegerCodingKeys = false
     
     /**
      Fail if any components are present in the encoded object which are not compatible to Google Protobuf.

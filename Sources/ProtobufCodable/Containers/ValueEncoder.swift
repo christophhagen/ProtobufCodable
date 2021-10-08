@@ -18,7 +18,7 @@ final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
         }
         self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
         if let key = self.key {
-            self.data = try primitive.encoded(withKey: key)
+            self.data = try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
         } else {
             self.data = try primitive.encodedWithLengthIfNeeded()
         }

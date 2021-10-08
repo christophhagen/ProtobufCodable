@@ -50,8 +50,10 @@ func roundTripProtobuf<T>(_ message: T) throws where T: ProtobufComparable {
     XCTAssertEqual(T.init(protoObject: decodedProtobuf), message)
 }
 
-func roundTripCodable<T>(type: T.Type = T.self, _ codable: T) throws where T: Codable, T: Equatable {
-    let data = try encode(codable)
+func roundTripCodable<T>(type: T.Type = T.self,
+                         _ codable: T,
+                         using encoder: ProtobufEncoder = .init()) throws where T: Codable, T: Equatable {
+    let data = try encode(to: encoder, codable)
     let decoded: T = try decode(data)
 
     XCTAssertEqual(decoded, codable)

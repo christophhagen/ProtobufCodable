@@ -17,7 +17,9 @@ final class KeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol whe
         switch value {
         case let primitive as BinaryEncodable:
             if primitive.isDefaultValue && omitDefaultValues { return }
-            try addObject { try primitive.encoded(withKey: key) }
+            try addObject {
+                try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
+            }
         case is AnyDictionary:
             try encodeDictionary(value, forKey: key)
         default:
@@ -87,7 +89,7 @@ extension KeyedEncoder: EncodedDataProvider {
     func encodedData() throws -> Data {
         let data = try objects.reduce(.empty) { try $0 + $1.encodedData() }
         if let key = self.key {
-            return try data.encoded(withKey: key)
+            return try data.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
         }
         return data
     }
