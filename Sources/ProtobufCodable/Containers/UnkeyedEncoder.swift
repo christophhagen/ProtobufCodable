@@ -55,7 +55,7 @@ final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
     }
 
     private func nilData(for key: CodingKey) throws -> Data {
-        guard !nilIncides.isEmpty else {
+        if nilIncides.isEmpty {
             return .empty
         }
         return try nilEncodingData.encoded(withKey: key.correspondingNilKey)
@@ -122,8 +122,9 @@ extension UnkeyedEncoder: EncodedDataProvider {
         guard let key = key else {
             return try nilEncodingData + valueData()
         }
-        if objects.isEmpty && nilIncides.isEmpty {
+        if objects.isEmpty && nilIncides.isEmpty && !omitDefaultValues {
             // An empty array of nil indices prevents an empty array from decoding as `nil`
+            // The nil data is omitted if defaults are not being encoded
             return emptyNilData(for: key)
         }
         let nilData = try self.nilData(for: key)

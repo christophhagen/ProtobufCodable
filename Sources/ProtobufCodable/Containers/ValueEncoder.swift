@@ -12,11 +12,10 @@ final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
     }
     
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
-        #warning("Implement `omitDefaultValues` option")
-//        if primitive.isDefaultValue && omitDefaultValues {
-//            self.data = .empty
-//            return
-//        }
+        if primitive.isDefaultValue && omitDefaultValues {
+            self.data = .empty
+            return
+        }
         self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
         if let key = self.key {
             self.data = try primitive.encoded(withKey: key)

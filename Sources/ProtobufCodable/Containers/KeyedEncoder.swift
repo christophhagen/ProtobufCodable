@@ -16,7 +16,7 @@ final class KeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol whe
     func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
         switch value {
         case let primitive as BinaryEncodable:
-            // if primitive.isDefaultValue && omitDefaultValues { return }
+            if primitive.isDefaultValue && omitDefaultValues { return }
             try addObject { try primitive.encoded(withKey: key) }
         case is AnyDictionary:
             try encodeDictionary(value, forKey: key)

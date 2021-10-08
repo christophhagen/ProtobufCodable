@@ -32,15 +32,25 @@ import Foundation
 public struct ProtobufEncoder {
 
     // MARK: Encoding options
-    
-    /// The user info key for omitting default values
-    static let omitDefaultKey: CodingUserInfoKey = .init(rawValue: "omitDefaults")!
 
-    /// The user info key for hashing string keys to reduce binary size
-    static let hashStringKey: CodingUserInfoKey = .init(rawValue: "hashStrings")!
+    enum UserInfoKey: String {
+        
+        /// The user info key for omitting default values
+        case omitDefaultValues = "omitDefaults"
 
-    /// The user info key when enforcing the use of integer keys
-    static let forceIntegersKey: CodingUserInfoKey = .init(rawValue: "forceIntegers")!
+        /// The user info key for hashing string keys to reduce binary size
+        case hashStringKeys = "hashStrings"
+
+        /// The user info key when enforcing the use of integer keys
+        case requireIntegerCodingKeys = "forceIntegers"
+
+        /// The user info key when enforcing the use of integer keys
+        case requireProtobufCompatibility = "protobufCompatible"
+
+        var userKey: CodingUserInfoKey {
+            .init(rawValue: rawValue)!
+        }
+    }
 
     /**
      Prevent default values (like `zero`) from being written to binary data.
@@ -49,7 +59,7 @@ public struct ProtobufEncoder {
      - Warning: If you specify `true` when encoding objects with optional values,
      any default value will be decoded as `nil`.
      */
-    var omitDefaultValues = false
+    public var omitDefaultValues = false
 
     /**
      Hash string keys of properties into integers to reduce binary size.
@@ -72,11 +82,18 @@ public struct ProtobufEncoder {
      */
     var requireProtobufCompatibility = false
 
+    private var keys: [UserInfoKey : Bool] {
+        [.omitDefaultValues : omitDefaultValues,
+         .hashStringKeys : hashStringKeys,
+         .requireIntegerCodingKeys : requireIntegerCodingKeys,
+         .requireProtobufCompatibility : requireProtobufCompatibility]
+    }
+
     /// The user info to pass to all nodes
-    var userInfo: [CodingUserInfoKey : Any] {
-        [Self.omitDefaultKey : omitDefaultValues,
-         Self.hashStringKey : hashStringKeys,
-         Self.forceIntegersKey : requireIntegerCodingKeys]
+    private var userInfo: [CodingUserInfoKey : Any] {
+        keys.reduce(into: [:]) {
+            $0[$1.key.userKey] = $1.value
+        }
     }
 
     // MARK: Creating an encoder

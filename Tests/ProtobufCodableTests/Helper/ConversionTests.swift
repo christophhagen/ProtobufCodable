@@ -2,13 +2,17 @@ import Foundation
 import XCTest
 @testable import ProtobufCodable
 
-private func encode<T>(_ value: T) throws -> Data where T: Encodable {
+private func encode<T>(to encoder: ProtobufEncoder, _ value: T) throws -> Data where T: Encodable {
     do {
-        return try ProtobufEncoder().encode(value)
+        return try encoder.encode(value)
     } catch {
         print("Failed to encode \(value): \(error)")
         throw error
     }
+}
+
+private func encode<T>(_ value: T) throws -> Data where T: Encodable {
+    try encode(to: .init(), value)
 }
 
 private func decode<T>(_ data: Data) throws -> T where T: Decodable {
@@ -61,3 +65,12 @@ func roundTripCodable<T>(_ type: T.Type = T.self, _ values: T...) throws where T
     try values.forEach { try roundTripCodable(type: type, $0) }
 }
 
+func compareBinary<T>(_ value: T, to encoder: ProtobufEncoder) throws where T: ProtobufComparable {
+    let codableData = try encode(to: encoder, value)
+    let protoData = try value.protobuf.serializedData()
+    XCTAssertEqual(codableData, protoData)
+    if codableData != protoData {
+        print("Expected: \(protoData.bytes)")
+        print("Is:       \(codableData.bytes)")
+    }
+}
