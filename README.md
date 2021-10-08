@@ -19,7 +19,7 @@ Considering that Apple itself provides an implementation to use [Google Protocol
 Simply include in your `Package.swift`:
 ```swift
 dependencies: [
-    .package(name: "ProtobufCodable", url: "https://github.com/christophhagen/ProtobufCodable", from: "0.1.0")
+    .package(name: "ProtobufCodable", url: "https://github.com/christophhagen/ProtobufCodable", from: "0.3.0")
 ],
 targets: [
     .target(name: "MyTarget", dependencies: ["ProtobufCodable"])
