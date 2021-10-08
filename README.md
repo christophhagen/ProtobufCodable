@@ -25,7 +25,10 @@ There are instances when [swift-protobuf](https://github.com/apple/swift-protobu
 Simply include in your `Package.swift`:
 ```swift
 dependencies: [
-    .package(name: "ProtobufCodable", url: "https://github.com/christophhagen/ProtobufCodable", from: "0.3.0")
+    .package(
+        name: "ProtobufCodable", 
+        url: "https://github.com/christophhagen/ProtobufCodable", 
+        from: "0.3.0")
 ],
 targets: [
     .target(name: "MyTarget", dependencies: ["ProtobufCodable"])
