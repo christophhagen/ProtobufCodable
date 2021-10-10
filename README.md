@@ -28,7 +28,7 @@ dependencies: [
     .package(
         name: "ProtobufCodable", 
         url: "https://github.com/christophhagen/ProtobufCodable", 
-        from: "0.3.0")
+        from: "0.4.0")
 ],
 targets: [
     .target(name: "MyTarget", dependencies: ["ProtobufCodable"])
