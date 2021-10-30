@@ -1,7 +1,5 @@
 import Foundation
 
-typealias FieldWithNilData = (field: DecodingDataProvider, nilData: Data?)
-
 final class TopLevelDecoder: CodingPathNode, Decoder {
 
     private let fields: [(key: CodingKey, data: FieldWithNilData)]?

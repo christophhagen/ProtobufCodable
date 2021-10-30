@@ -177,8 +177,8 @@ Protobuf primitive | ProtobufCodable equivalent
 `repeated type`  | `Array<Type> where Type: Codable` | Fully supported
 `map<key,value>` | `Dictionary<Key,Value>` | Fully supported
 nested types | nested `Codable` type
-`oneof` | Not supported, no straight-forward equivalent
-`enum` | Not supported
+`oneof` | Not supported (no straight-forward equivalent)
+`enum` | `Enum` with raw type `Int`
 `Any` | Not supported
 groups | Not supported
 

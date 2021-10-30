@@ -1,27 +1,31 @@
 import Foundation
 
-final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
-    
-    private var data: Data?
-    
-    private var encodedTypeInfo: String?
+final class ValueEncoder: ObjectEncoder, SingleValueEncodingContainer {
 
     func encodeNil() throws {
-        self.data = nil
-        self.encodedTypeInfo = "nil"
+        // Nothing to do when encoding nil
     }
     
     private func encodePrimitive(_ primitive: BinaryEncodable) throws {
         if primitive.isDefaultValue && omitDefaultValues {
-            self.data = .empty
             return
         }
-        self.encodedTypeInfo = "\(type(of: primitive)): \(primitive)"
         if let key = self.key {
-            self.data = try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
+            try addObject {
+                try primitive.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
+            }
         } else {
-            self.data = try primitive.encodedWithLengthIfNeeded()
+            try addObject {
+                try primitive.encodedWithLengthIfNeeded()
+            }
         }
+    }
+
+    private func encodeComplex<T>(_ value: T) throws where T: Encodable {
+        let encoder = addObject {
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+        }
+        try value.encode(to: encoder)
     }
     
     func encode<T>(_ value: T) throws where T: Encodable {
@@ -29,7 +33,7 @@ final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
         case let primitive as BinaryEncodable:
             try encodePrimitive(primitive)
         default:
-            throw ProtobufEncodingError.notImplemented("SingleValueContainer.encode(_)")
+            try encodeComplex(value)
         }
     }
 }
@@ -37,13 +41,13 @@ final class ValueEncoder: CodingPathNode, SingleValueEncodingContainer {
 extension ValueEncoder: EncodedDataProvider {
 
     func encodedData() throws -> Data {
-        data ?? .empty
+        try objects.reduce(.empty) { try $0 + $1.encodedData() }
     }
 }
 
 extension ValueEncoder: CustomStringConvertible {
     
     var description: String {
-        encodedTypeInfo ?? "\(type(of: self))"
+        "ValueEncoder"
     }
 }

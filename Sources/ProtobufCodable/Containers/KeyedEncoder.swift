@@ -5,7 +5,7 @@ final class KeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol whe
     // MARK: Encoding
 
     func encodeNil(forKey key: Key) throws {
-        throw ProtobufEncodingError.notImplemented("KeyedEncodingContainer.encodeNil(forKey:)")
+        // Nil values are simply ommited
     }
 
     /**
