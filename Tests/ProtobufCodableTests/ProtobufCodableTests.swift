@@ -120,25 +120,8 @@ final class ProtobufCodableTests: XCTestCase {
         let t = Test(a: .two)
         try roundTripCodable(t)
     }
-    
-    func testSet() throws {
-        
-        let test: Set<Int> = [1,2,3,4,5]
-        try roundTripCodable(test)
-    }
-    
-    func testNestedSet() throws {
-        
-        struct Test: Codable, Equatable {
-            
-            let a: Set<Int>
-        }
-        
-        let test = Test(a: [1,2,3,4,5])
-        try roundTripCodable(test)
-    }
 
-    private let rounds = 50000
+    private let rounds = 10000
 
     let message = BasicMessage(
         double: 3.14, float: 3.14, int32: 123, int64: 123,

@@ -11,43 +11,71 @@ final class PrimitiveTypeTests: XCTestCase {
     private func roundTripFixed<T>(_ type: FixedWidth<T>.Type = FixedWidth<T>.self, _ values: T...) throws where T: FixedWidthCompatible, T: Codable, T: Equatable {
         try values.forEach { try roundTripCodable(type: type, FixedWidth<T>.init(wrappedValue: $0)) }
     }
+
+    private func encodedData<T>(_ type: T.Type = T.self,
+                                _ codable: T, hasLength length: Int) throws where T: Codable, T: Equatable {
+        let data = try ProtobufEncoder().encode(codable)
+        XCTAssertEqual(data.count, length)
+        if data.count != length {
+            print(data.bytes)
+        }
+    }
+
+    private func encodedData<T>(_ type: T.Type = T.self,
+                                _ codable: T, isEqualTo expected: Data) throws where T: Codable, T: Equatable {
+        let data = try ProtobufEncoder().encode(codable)
+        XCTAssertEqual(data, expected)
+        if data != expected {
+            print(data.bytes)
+        }
+    }
     
     func testUInt8() throws {
+        try encodedData(UInt8.self, .max, isEqualTo: Data([255]))
         try roundTripCodable(UInt8.self, .zero, 123, 234, .max, .min)
         try roundTripCodable(Optional<UInt8>.self, .zero, 123, 234, .max, .min, nil)
     }
     
     func testInt8() throws {
+        try encodedData(Int8.self, .max, isEqualTo: Data([127]))
         try roundTripCodable(Int8.self, .zero, 123, -123, .max, .min)
         try roundTripCodable(Optional<Int8>.self, .zero, 123, -123, .max, .min, nil)
     }
     
     func testUInt16() throws {
+        let expected = Data([255, 255, 3])
+        try encodedData(UInt16.self, .max, isEqualTo: expected)
         try roundTripCodable(UInt16.self, .zero, 12345, 23456, .max, .min)
         try roundTripCodable(Optional<UInt16>.self, .zero, 12345, 23456, .max, .min, nil)
     }
     
     func testInt16() throws {
+        let expected = Data([255, 255, 1])
+        try encodedData(Int16.self, .max, isEqualTo: expected)
         try roundTripCodable(Int16.self, .zero, 12345, -12345, .max, .min)
         try roundTripCodable(Optional<Int16>.self, .zero, 12345, -12345, .max, .min, nil)
     }
     
     func testUInt32() throws {
+        try encodedData(UInt32.self, .max, hasLength: 5)
         try roundTripCodable(UInt32.self, .zero, 1234567890, 2345678901, .max, .min)
         try roundTripCodable(Optional<UInt32>.self, .zero, 1234567890, 2345678901, .max, .min, nil)
     }
     
     func testInt32() throws {
+        try encodedData(Int32.self, .max, hasLength: 5)
         try roundTripCodable(Int32.self, .zero, 1234567890, -1234567890, .max, .min)
         try roundTripCodable(Optional<Int32>.self, .zero, 1234567890, -1234567890, .max, .min, nil)
     }
     
     func testUInt64() throws {
+        try encodedData(UInt64.self, .max, hasLength: 10)
         try roundTripCodable(UInt64.self, .zero, 12345678901234567890, 2345678901234567890, .max, .min)
         try roundTripCodable(Optional<UInt64>.self, .zero, 12345678901234567890, 2345678901234567890, .max, .min, nil)
     }
     
     func testInt64() throws {
+        try encodedData(Int64.self, .min, hasLength: 10)
         try roundTripCodable(Int64.self, .zero, 1234567890123456789, -1234567890123456789, .max, .min)
         try roundTripCodable(Optional<Int64>.self, .zero, 1234567890123456789, -1234567890123456789, .max, .min, nil)
     }
@@ -118,108 +146,21 @@ final class PrimitiveTypeTests: XCTestCase {
     }
     
     func testBytes() throws {
-        // []
+        // [0]
         // [0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
         // [0, 42, ... 42]
+        let input = Data(repeating: 42, count: 24)
+        try encoded(input, matches: Data([0]) + input)
         try roundTripCodable(Data.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234))
+        // [0]
+        // [0, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
+        // [0, 42, ... 42]
+        // []
         try roundTripCodable(Optional<Data>.self, .empty, Data(repeating: 42, count: 24), Data(repeating: 42, count: 1234), nil)
     }
 
-    func testArrays() throws {
-        try roundTripCodable([UInt8].self, [.zero,.min, .max])
-        try roundTripCodable([UInt16].self, [.zero,.min, .max])
-        try roundTripCodable([UInt32].self, [.zero,.min, .max])
-        try roundTripCodable([UInt64].self, [.zero,.min, .max])
-        try roundTripCodable([UInt].self, [.zero,.min, .max])
-        try roundTripCodable([Int8].self, [.zero,.min, .max])
-        try roundTripCodable([Int16].self, [.zero,.min, .max])
-        try roundTripCodable([Int32].self, [.zero,.min, .max])
-        try roundTripCodable([Int64].self, [.zero,.min, .max])
-        try roundTripCodable([Int].self, [.zero,.min, .max])
-        try roundTripCodable([Float].self, [.zero, .greatestFiniteMagnitude, .pi])
-        try roundTripCodable([Double].self, [.zero, .greatestFiniteMagnitude, .pi])
-        try roundTripCodable([Bool].self, [false, true, false])
-        try roundTripCodable([String].self, ["Some", "More", ""])
-        try roundTripCodable([Data].self, [.empty, Data(repeating: 42, count: 12)])
-    }
-
-    func testArraysWithOptionals() throws {
-        // [2, 1, 3, 0, 255]
-        try roundTripCodable([Optional<UInt8>].self, [.zero, nil, .max, nil])
-
-        // [3, 1, 2, 4, 0, 255]
-        try roundTripCodable([Optional<UInt8>].self, [.zero, nil, nil, .max, nil])
-
-        // [3, 1, 3, 4, 0, 255]
-        try roundTripCodable([Optional<UInt8>].self, [.zero, nil, .max, nil, nil])
-
-        // [1, 3, 0, 0, 255]
-        try roundTripCodable([Optional<UInt8>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 0, 255, 255, 3]
-        try roundTripCodable([Optional<UInt16>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 0, 255, 255, 255, 255, 15]
-        try roundTripCodable([Optional<UInt32>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]
-        try roundTripCodable([Optional<UInt64>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1]
-        try roundTripCodable([Optional<UInt>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 128, 127]
-        try roundTripCodable([Optional<Int8>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 128, 128, 254, 255, 255, 255, 255, 255, 255, 1, 255, 255, 1]
-        try roundTripCodable([Optional<Int16>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 128, 128, 128, 128, 248, 255, 255, 255, 255, 1, 255, 255, 255, 255, 7]
-        try roundTripCodable([Optional<Int32>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 1, 255, 255, 255, 255, 255, 255, 255, 255, 127]
-        try roundTripCodable([Optional<Int64>].self, [.zero, .min, .max, nil])
-
-        // [1, 3, 0, 128, 128, 128, 128, 128, 128, 128, 128, 128, 1, 255, 255, 255, 255, 255, 255, 255, 255, 127]
-        try roundTripCodable([Optional<Int>].self, [.zero, .min, .max, nil])
-
-        // [1, 3,  0, 0, 0, 0,  255, 255, 127, 127,  218, 15, 73, 64]
-        try roundTripCodable([Optional<Float>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
-
-        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 239, 127, 24, 45, 68, 84, 251, 33, 9, 64]
-        try roundTripCodable([Optional<Double>].self, [.zero, .greatestFiniteMagnitude, .pi, nil])
-
-        // [1, 3, 0, 1, 0]
-        try roundTripCodable([Optional<Bool>].self, [false, true, false, nil])
-
-        // [1, 3, 4, 83, 111, 109, 101, 4, 77, 111, 114, 101, 0]
-        try roundTripCodable([Optional<String>].self, ["Some", "More", "", nil])
-
-        // [1, 2, 0, 12, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42]
-        try roundTripCodable([Optional<Data>].self, [.empty, Data(repeating: 42, count: 12), nil])
-
-        // [1, 3, 0, 255, 255, 255, 255, 15, 254, 255, 255, 255, 15]
-        try roundTripCodable([Optional<SignedValue<Int32>>].self, [.zero ,.min, .max, nil])
-
-        // [1, 3, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1, 254, 255, 255, 255, 255, 255, 255, 255, 255, 1]
-        try roundTripCodable([Optional<SignedValue<Int64>>].self, [.zero ,.min, .max, nil])
-
-        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 127]
-        try roundTripCodable([Optional<FixedWidth<Int32>>].self, [.zero ,.min, .max, nil])
-
-        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 128, 255, 255, 255, 255, 255, 255, 255, 127]
-        try roundTripCodable([Optional<FixedWidth<Int64>>].self, [.zero ,.min, .max, nil])
-
-        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255]
-        try roundTripCodable([Optional<FixedWidth<UInt32>>].self, [.zero ,.min, .max, nil])
-
-        // [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255]
-        try roundTripCodable([Optional<FixedWidth<UInt64>>].self, [.zero ,.min, .max, nil])
-        
-    }
-
     func testDictionaries() throws {
-        // [8, 8, 0, 18, 4, 122, 101, 114, 111]
+        // [8, 0, 18, 4, 122, 101, 114, 111]
         try roundTripCodable([Int : String].self, [.zero : "zero"])
 
         // [8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
@@ -238,5 +179,10 @@ final class PrimitiveTypeTests: XCTestCase {
         // [2, 12, 20, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
         try roundTripCodable([Int32? : String?].self, [.zero : "zero", 123 : "123", nil : nil])
 
+    }
+
+    func testOptionals() throws {
+        try encodedData(Optional<UInt8>.self, 123, isEqualTo: Data([123]))
+        try encodedData(Optional<UInt8>.self, nil, isEqualTo: Data([]))
     }
 }

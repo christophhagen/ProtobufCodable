@@ -37,14 +37,24 @@ private struct EnumContainer: Codable, Equatable, ProtobufComparable {
 
 final class EnumTests: XCTestCase {
 
+    enum NormalTest: Codable {
+        case a
+    }
+
+    func testEncodeEnum() throws {
+        // Note: Normal enums call KeyedEncoder.nestedContainer() with the case as
+        // a string CodingKey. The nestedContainer itself is empty
+        let input = Data([
+            11, // Wire type `stringKey`, key length 1
+            97, // Key `a`
+            2, // Wire type `lengthDelimited`
+            0 // Length 0
+        ])
+        try encoded(NormalTest.a, matches: input)
+    }
+
     func testEnum() throws {
-
-        enum Test: Codable {
-            case a
-        }
-
-        let t = Test.a
-        try roundTripCodable(t)
+        try roundTripCodable(NormalTest.a)
     }
     
     func testIntEnum() throws {
