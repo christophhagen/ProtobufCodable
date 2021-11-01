@@ -103,7 +103,8 @@ final class UnkeyedDecoder: CodingPathNode, UnkeyedDecodingContainer {
                 path: codingPath,
                 key: nil,
                 info: userInfo,
-                data: [(field: provider, nilData: nil)])
+                data: [(field: provider, nilData: nil)],
+                includesLength: isAtTopLevel)
             let value = try type.init(from: decoder)
             didDecodeValue()
             return value

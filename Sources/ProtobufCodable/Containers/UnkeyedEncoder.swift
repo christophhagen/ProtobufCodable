@@ -63,6 +63,13 @@ final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
         try objects.reduce(.empty) { try $0 + $1.encodedData() }
     }
 
+    func valueDataWithLengths() throws -> Data {
+        try objects.reduce(.empty) {
+            let data = try $1.encodedData()
+            return $0 + data.count.binaryData() + data
+        }
+    }
+
     private func nilData(for key: CodingKey) throws -> Data {
         if nilIncides.isEmpty {
             return .empty
@@ -97,7 +104,7 @@ final class UnkeyedEncoder: ObjectEncoder, UnkeyedEncodingContainer {
 
     private func encodeChild(_ child: Encodable) throws {
         let encoder = addObject {
-            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo, requiresLength: isAtTopLevel)
         }
         try child.encode(to: encoder)
         canPackFields = false

@@ -2,6 +2,13 @@ import Foundation
 
 final class KeyedEncoder<Key>: ObjectEncoder, KeyedEncodingContainerProtocol where Key: CodingKey {
 
+    let requiresLength: Bool
+
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], requiresLength: Bool = false) {
+        self.requiresLength = requiresLength
+        super.init(path: path, key: key, info: info)
+    }
+
     // MARK: Encoding
 
     func encodeNil(forKey key: Key) throws {
@@ -90,6 +97,9 @@ extension KeyedEncoder: EncodedDataProvider {
         let data = try objects.reduce(.empty) { try $0 + $1.encodedData() }
         if let key = self.key {
             return try data.encoded(withKey: key, requireIntegerKey: requireIntegerCodingKeys)
+        }
+        if requiresLength {
+            return data.count.binaryData() + data
         }
         return data
     }

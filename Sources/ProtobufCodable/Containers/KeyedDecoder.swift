@@ -8,15 +8,24 @@ final class KeyedDecoder<Key>: CodingPathNode, KeyedDecodingContainerProtocol wh
 
     private var fields = [(key: CodingKey, data: FieldWithNilData)]()
 
+    private let includesLength: Bool
+
     init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], fields: [(key: CodingKey, data: FieldWithNilData)]) throws {
         self.fields = fields
+        self.includesLength = false
         super.init(path: path, key: key, info: info)
     }
 
-    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) throws {
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData], includesLength: Bool = false) throws {
+        self.includesLength = includesLength
         super.init(path: path, key: key, info: info)
         for (provider, _) in data {
-            try decodeAllFields(provider: provider)
+            if includesLength {
+                let data = try provider.getLengthEncodedField()
+                try decodeAllFields(provider: .init(data: data))
+            } else {
+                try decodeAllFields(provider: provider)
+            }
         }
     }
 

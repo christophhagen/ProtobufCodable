@@ -2,6 +2,13 @@ import Foundation
 
 final class ValueEncoder: ObjectEncoder, SingleValueEncodingContainer {
 
+    let requiresLength: Bool
+
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], requiresLength: Bool = false) {
+        self.requiresLength = requiresLength
+        super.init(path: path, key: key, info: info)
+    }
+
     func encodeNil() throws {
         // Nothing to do when encoding nil
     }
@@ -23,7 +30,7 @@ final class ValueEncoder: ObjectEncoder, SingleValueEncodingContainer {
 
     private func encodeComplex<T>(_ value: T) throws where T: Encodable {
         let encoder = addObject {
-            TopLevelEncoder(path: codingPath, key: key, info: userInfo)
+            TopLevelEncoder(path: codingPath, key: key, info: userInfo, requiresLength: requiresLength)
         }
         try value.encode(to: encoder)
     }

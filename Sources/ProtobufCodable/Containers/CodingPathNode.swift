@@ -22,6 +22,10 @@ class CodingPathNode {
      */
     let userInfo: [CodingUserInfoKey: Any]
 
+    var isAtTopLevel: Bool {
+        key == nil
+    }
+
     /**
      Create a new node.
      - Parameter path: The coding path to the node, including the node's key.

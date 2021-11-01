@@ -11,6 +11,13 @@ final class TopLevelEncoder: CodingPathNode {
     // MARK: Properties
 
     private var object: EncodedDataProvider?
+
+    let requiresLength: Bool
+
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], requiresLength: Bool = false) {
+        self.requiresLength = requiresLength
+        super.init(path: path, key: key, info: info)
+    }
     
     @discardableResult
     private func set<T: EncodedDataProvider>(object: T) -> T {
@@ -24,7 +31,7 @@ final class TopLevelEncoder: CodingPathNode {
 extension TopLevelEncoder: Encoder {
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let object = KeyedEncoder<Key>(path: codingPath, key: key, info: userInfo)
+        let object = KeyedEncoder<Key>(path: codingPath, key: key, info: userInfo, requiresLength: requiresLength)
         set(object: object)
         return KeyedEncodingContainer(object)
     }
@@ -34,7 +41,7 @@ extension TopLevelEncoder: Encoder {
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        set(object: ValueEncoder(path: codingPath, key: key, info: userInfo))
+        set(object: ValueEncoder(path: codingPath, key: key, info: userInfo, requiresLength: requiresLength))
     }
 }
 

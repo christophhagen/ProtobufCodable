@@ -6,15 +6,19 @@ final class TopLevelDecoder: CodingPathNode, Decoder {
 
     private let data: [FieldWithNilData]
 
-    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData]) {
+    private let includesLength: Bool
+
+    init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], data: [FieldWithNilData], includesLength: Bool = false) {
         self.data = data
         self.fields = nil
+        self.includesLength = includesLength
         super.init(path: path, key: key, info: info)
     }
 
     init(path: [CodingKey], key: CodingKey?, info: [CodingUserInfoKey : Any], fields: [(key: CodingKey, data: FieldWithNilData)]) {
         self.fields = fields
         self.data = []
+        self.includesLength = false
         super.init(path: path, key: key, info: info)
     }
     
@@ -23,7 +27,7 @@ final class TopLevelDecoder: CodingPathNode, Decoder {
             let container = try KeyedDecoder<Key>(path: codingPath, key: key, info: userInfo, fields: fields)
             return KeyedDecodingContainer<Key>(container)
         }
-        let container = try KeyedDecoder<Key>(path: codingPath, key: key, info: userInfo, data: data)
+        let container = try KeyedDecoder<Key>(path: codingPath, key: key, info: userInfo, data: data, includesLength: includesLength)
         return KeyedDecodingContainer<Key>(container)
     }
     
@@ -32,6 +36,6 @@ final class TopLevelDecoder: CodingPathNode, Decoder {
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        ValueDecoder(path: codingPath, key: key, info: userInfo, data: data)
+        ValueDecoder(path: codingPath, key: key, info: userInfo, data: data, includesLength: includesLength)
     }
 }
