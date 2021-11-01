@@ -39,6 +39,9 @@ final class DecodingDataProvider {
      - Throws: `ProtobufDecodingError.missingData`, if not enough bytes are available.
      */
     func getNextBytes(_ count: Int) throws -> Data {
+        guard count >= 0 else {
+            throw ProtobufDecodingError.dataCorrupted
+        }
         guard count <= remainingByteCount else {
             throw ProtobufDecodingError.missingData
         }

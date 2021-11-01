@@ -26,6 +26,9 @@ public enum ProtobufDecodingError: Error {
     /// The decoder expected a field with value `1` or `2` while decoding a dictionary key pair
     case invalidDictionaryKey
 
+    /// Unexpected data was parsed, which suggests corrupted binary data
+    case dataCorrupted
+
     /**
      The decoded type requested a feature of the decoder which is currently unimplemented.
 
