@@ -24,8 +24,8 @@ final class DictMessageTests: XCTestCase {
         234, 1, // varint 234
     ])
 
-    func testEncodeStringDict() throws {
-        try encoded(strIntDict, matches: pair1 + pair2, pair2 + pair1)
+    func testRawStringDict() throws {
+        try roundTripCodable(strIntDict)
     }
 
     func testEncodeStructWithDict() throws {
@@ -51,6 +51,28 @@ final class DictMessageTests: XCTestCase {
         try roundTripProtobuf(DictContainer(
             intDict: [123 : BasicMessage(int32: 234),
                       -345 : BasicMessage(fixedInt32: 456)]))
+    }
+
+    func testDictionaries() throws {
+        // [8, 0, 18, 4, 122, 101, 114, 111]
+        try roundTripCodable([Int : String].self, [.zero : "zero"])
+
+        // [8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
+        try roundTripCodable([Int : String].self, [.zero : "zero", 123 : "123"])
+
+        // [8, 10, 4, 122, 101, 114, 111, 16, 0, 4, 8, 123, 16, 123]
+        try roundTripCodable([String : Int].self, ["zero" : .zero, "123" : 123])
+
+        // Either: [7, 8, 123, 18, 3, 49, 50, 51,   8, 8, 0, 18, 4, 122, 101, 114, 111]
+        // or:     [8, 8, 0, 18, 4, 122, 101, 114, 111,   7, 8, 123, 18, 3, 49, 50, 51]
+        try roundTripCodable([Int32 : String].self, [.zero : "zero", 123 : "123"])
+
+        // [6, 12, 18, 3, 110, 105, 108, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
+        try roundTripCodable([Int32? : String].self, [.zero : "zero", 123 : "123", nil : "nil"])
+
+        // [2, 12, 20, 8, 8, 0, 18, 4, 122, 101, 114, 111, 7, 8, 123, 18, 3, 49, 50, 51]
+        try roundTripCodable([Int32? : String?].self, [.zero : "zero", 123 : "123", nil : nil])
+
     }
 }
 

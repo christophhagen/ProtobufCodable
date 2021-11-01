@@ -82,16 +82,4 @@ final class RepeatedFieldsTests: XCTestCase {
             strings: ["some", "more", "third"])
         try roundTripProtobuf(codable)
     }
-
-    func testConcatenations() throws {
-        let message1 = BasicMessage(double: 3.14, int32: 123)
-        let message2 = BasicMessage(float: 3.14, int64: 123)
-        let data1 = try ProtobufEncoder.encode(message1)
-        let data2 = try ProtobufEncoder.encode(message2)
-        let data = try ProtobufEncoder.encode([message1, message2])
-
-        // The [0] added before the message concatenations represents the nil index set,
-        // which contains no values.
-        XCTAssertEqual(data, Data([0]) + data1 + data2)
-    }
 }
