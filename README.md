@@ -1,5 +1,5 @@
 # ⚠️ WARNING ⚠️
-This library will undergo significant updates to the binary format in the upcoming months, and contains major bugs until then. Use at your own risk! See issues [#3](https://github.com/christophhagen/ProtobufCodable/issues/3) and [#4](https://github.com/christophhagen/ProtobufCodable/issues/4) for more info.
+This library has been replaced by [BinaryCodable](https://github.com/christophhagen/BinaryCodable), which offers better functionality, less bugs, and is actively being developed.
 
 # ProtobufCodable
 
