@@ -13,14 +13,14 @@ The biggest advantage is that there is less work to do.
 With [swift-protobuf](https://github.com/apple/swift-protobuf), you have to write (and understand) a `.proto` file, and install the `protoc` compiler with the Swift plugin.
 Then you have to generate the file, and integrate it into your code.
 
-On the other hand, using `ProtobufCodable` makes this easier.
-Conform your type to `Codable` (while respecting the [limitations](#limitations), and happily encode and decode `Protobuf`-compatible representations.
+Using `ProtobufCodable` makes this much faster.
+Conform your type to `Codable` (while respecting the [limitations](#supported-protobuf-types), and happily encode and decode `Protobuf`-compatible representations.
 
-### Ensuring consistency
+#### Ensuring consistency
 
 Encoding formats for data exchange are meant to be stable, since sender and receiver may be using different platforms, programming languages, or software versions.
 The Protobuf format is very aware of this fact, and the [documentation](https://protobuf.dev/programming-guides/dos-donts/) provides very useful pointers to minimize errors across versions.
-You should be very careful when changing and `Codable` types used with `ProtobufCodable` to ensure that there are no decoding problems for older versions or stored data.
+You should be very careful when changing any `Codable` types used with `ProtobufCodable` to ensure that there are no decoding problems for older versions or stored data.
 
 ### Why not?
 
@@ -79,7 +79,10 @@ struct MyType: Codable {
 ```
 
 The first thing to note is the addition of the `CodingKeys` enum, which is how `Codable` specifies [integer keys](https://developer.apple.com/documentation/swift/codingkey) for properties.
-The same [restrictions](https://protobuf.dev/programming-guides/proto3/#assigning) as with Protobuf field numbers apply.
+The same [restrictions](https://protobuf.dev/programming-guides/proto3/#assigning) as with Protobuf field numbers apply:
+- The field number must be between `1` and `536,870,911`
+- The given number must be unique among all fields for that message.
+- Field numbers `19,000` to `19,999` are reserved for the Protocol Buffers implementation.
 
 ### Supported Protobuf types
 
@@ -93,9 +96,9 @@ The type of the property must match one of the following:
 | double | Double | 64-bit
 | float | Float | 32-bit
 | int32 | Int32 | Preferred for positive values
-| int64 | Int64, Int | Preferred for positive values
+| int64 | Int64, Int | Preferred for positive values
 | uint32 | UInt32 |
-| uint64 | UInt64 |
+| uint64 | UInt64 |
 | sint32 | [Signed\<Int32\>](#signed-wrapper) | For positive and negative numbers
 | sint64 | [Signed\<Int64\>, Signed\<Int\>](#signed-wrapper) | For positive and negative numbers
 | fixed32 | [Fixed\<UInt32\>](#fixed-wrapper) | Always 4 byte
@@ -221,12 +224,12 @@ struct MyMessage {
 
 ### OneOf
 
-The Protobuf [oneof](https://protobuf.dev/programming-guides/proto3/#oneof) type has no basic equivalent in Swift.t
+The Protobuf [oneof](https://protobuf.dev/programming-guides/proto3/#oneof) type has no basic equivalent in Swift.
 The desired behaviour can be reproduced by conforming an enum with associated values to the `OneOf` protocol.
 
 ```proto
 message SampleMessage {
-    oneof test_oneof {
+    oneof selection {
         string name = 4;
         SubMessage sub_message = 9;
     }
@@ -238,9 +241,9 @@ This is equivalent to:
 ```swift
 struct SampleMessage {
 
-    var oneof: TestOneOf
+    var oneof: Selection
 
-    enum TestOneOf: OneOf {
+    enum Selection: OneOf {
         case name(String)
         case subMessage(SubMessage)
 
@@ -365,7 +368,7 @@ Simply import the module when you need to encode or decode a message:
 import ProtobufCodable
 ```
 
-## Encoding
+### Encoding
 
 Construct an encoder when converting instances to binary data, and feed the message(s) into it:
 
@@ -378,7 +381,7 @@ let data = try encoder.encode(message)
 
 It's also possible to encode single values, arrays, optionals, sets, enums, and dictionaries, so long as they conform to `Codable`.
 
-## Decoding
+### Decoding
 
 Decoding instances from binary data works much the same way:
 
@@ -393,14 +396,6 @@ Alternatively, the type can be inferred:
 let message: Message = decoder.decode(from: data)
 ```
 
-## A note on integer keys
-
-Use positive integer keys for each field.
-
-## Encoding Options
-
-There is different encoding options available to adjust the behaviour of the encoding process. These options can be specified on the `ProtobufEncoder` struct after creating it.
-
 ### Sorting keys
 
 The `ProtobufEncoder` provides the `sortKeysDuringEncoding` option, which forces fields in "keyed" containers, such as `struct` properties (and some dictionaries), to be sorted in the binary data. 
@@ -413,42 +408,42 @@ It should therefore only be used if the binary data must be consistent across mu
 Elements of any non-ordered types (Sets, Dictionaries) will appear in random order in the binary data.
 Please also see the [Protobuf information](https://protobuf.dev/programming-guides/serialization-not-canonical/) on this topic.
 
-## Merging
+### Merging
 
 Protocol Buffers support the [merging of messages](https://developers.google.com/protocol-buffers/docs/encoding#optional), which overwrites non-repeated fields, and concatenates repeated fields.
 
 `ProtobufCodable` also supports this feature in most cases.
 Just encode the messages, and decode the joined data.
 
-## Errors
+### Errors
 
 It is possible for both encoding and decoding to fail. 
 
 All possible errors occuring during encoding produce `EncodingError` errors, while unsuccessful decoding produces `DecodingError`s. See the documentation of the types to learn more about the different error conditions.
 
-# Roadmap
+## Roadmap
 
-## Generate protobuf definitions
+### Generate protobuf definitions
 
 It should be possible to generate a string containing a working Protobuf definition for any type that is determined to be Protobuf compatible.
 This may be possible using `Mirror`, or by encoding one or more instances to figure out the structure.
 
-## Speed
+### Speed
 
 Increasing the speed of the encoding and decoding process is not a huge priority at the moment. `ProtobufCodable` is about 30% slower than `swift-protobuf`, but still fast enough for most cases (`0.03ms` for encoding of a small object on a MacBook Air M1). If you have any pointers on how to improve the performance further, feel free to contribute.
 
-# Contributing
+## Contributing
 
 Users of the library are encouraged to contribute to this repository.
 
-## Feature suggestions
+### Feature suggestions
 
 Please file an issue with a description of the feature you're missing. Check other open and closed issues for similar suggestions and comment on them before creating a new issue.
 
-## Bug reporting
+### Bug reporting
 
 File an issue with a clear description of the problem. Please include message definitions and other data where possible so that the error can be reproduced.
 
-## Documentation
+### Documentation
 
 If you would like to help translate the documentation of this library into other languages, please also open an issue, and I'll contact you for further discussions.
