@@ -1,6 +1,3 @@
-# ⚠️ WARNING ⚠️
-This library has been replaced by [BinaryCodable](https://github.com/christophhagen/BinaryCodable), which offers better functionality, less bugs, and is actively being developed.
-
 # ProtobufCodable
 
 This framework provides encoding and decoding of Swift `Codable` types, which is compatible with the [Google Protocol Buffer](https://developers.google.com/protocol-buffers) format.
