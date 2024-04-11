@@ -3,8 +3,8 @@ import Foundation
 /**
  An error which occurs when the data to decode is in an incorrect format.
  
- This error is used internally during decoding, and should not occur when using ``BinaryDecoder``, ``BinaryStreamDecoder`` or ``BinaryFileDecoder``.
- It is only relevant when directly using the decoding initializers for ``FixedSizeDecodable``, ``VariableLengthDecodable``,  or ``ZigZagDecodable``.
+ This error is used internally during decoding, and should not occur when using ``ProtobufDecoder``.
+ It is only relevant when directly using the decoding initializers for ``FixedSizeDecodable``.
  */
 public struct CorruptedDataError: Error {
     
