@@ -1,98 +1,64 @@
 import Foundation
 
 /**
- A type to decode objects from binary data produced by ``ProtobufEncoder``.
+ An encoder to convert protobuf binary data back to `Codable` objects.
 
- # Overview
+ Decoding unsupported data types causes `DecodingError` or `ProtobufDecodingError` errors.
 
- The example below shows how to decode an instance of a simple `GroceryProduct` type from binary data. The type adopts `Codable` so that it’s decodable using a `ProtobufDecoder` instance.
- ```swift
- struct GroceryProduct: Codable {
-     var name: String
-     var points: Int
-     var description: String?
- }
-
- let source = GroceryProduct(
-     name: "Durian",
-     points: 600,
-     description: "A fruit with a distinctive scent.")
- 
- let binaryData = ProtobufEncoder().encode(source)
-
- let decoder = ProtobufDecoder()
- let product = try decoder.decode(GroceryProduct.self, from: binaryData)
-
- print(product.name) // Prints "Durian"
+ To decode from data, instantiate a decoder and specify the type:
  ```
+ let decoder = BinaryDecoder()
+ let message = try decoder.decode(Message.self, from: data)
+ ```
+ Alternatively, the type can be inferred from context:
+ ```
+ func decode(data: Data) throws -> Message {
+     try BinaryDecoder().decode(from: data)
+ }
+ ```
+ There are also convenience functions to directly decode a single instance:
+ ```
+ let message = try BinaryDecoder.decode(Message.self, from: data)
+ ```
+ - Note: A single decoder can be used to decode multiple messages.
  */
-public struct ProtobufDecoder {
+public final class ProtobufDecoder {
 
     /**
-     Creates a new, reusable binary decoder.
+     Any contextual information set by the user for decoding.
+
+     This dictionary is passed to all containers during the decoding process.
      */
-    public init() { }
-    
-    // MARK: Options
-    
-    static let intOverflowKey = CodingUserInfoKey(rawValue: "integerOverflow")!
-    
-    enum IntegerOverflowDecodingStrategy {
-        
-        /// Throw an error, if a varint is too large/small to fit in the type
-        case fail
-        
-        /// If a varint is too large/too small, use `min`/`max` values of the type
-        case clamp
-        
-        /// If a varint is too large/small, overflow the type
-        case overflow
-    }
-    
-    var integerOverflowDecodingStrategy: IntegerOverflowDecodingStrategy = .fail
-    
-    var userInfo: [CodingUserInfoKey: Any] {
-        [Self.intOverflowKey : integerOverflowDecodingStrategy]
-    }
-    
-    // MARK: Decoding
+    public var userInfo = [CodingUserInfoKey : Any]()
 
     /**
-     Returns a value of the type you specify, decoded from binary data.
+     Create a new binary encoder.
+     - Note: A single decoder can be used to decode multiple messages.
+     */
+    public init() {
 
+    }
 
-     - Parameter type: The type of the value to decode from the supplied data.
-     - Parameter data: The binary data to decode.
-     - Returns: A value of the specified type, if the decoder can parse the data.
-     - Throws: Errors of type `ProtobufDecodingError`
+    /**
+     Decode a type from binary data.
+     - Parameter type: The type to decode.
+     - Parameter data: The binary data which encodes the instance
+     - Returns: The decoded instance
+     - Throws: Errors of type `DecodingError` or `ProtobufDecodingError`
      */
     public func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
-        let data: [FieldWithNilData] = [(.init(data: data), nil)]
-        if type is AnyDictionary.Type {
-            let decoder = DictionaryDecoder(path: [], key: nil, info: userInfo, data: data)
-            return try .init(from: decoder)
-        } else {
-            let decoder = TopLevelDecoder(path: [], key: nil, info: userInfo, data: data)
-            return try .init(from: decoder)
-        }
+        let root = TopLevelDecoder(data: data, userInfo: userInfo)
+        return try type.init(from: root)
     }
 
     /**
-     Decode a value of a type from binary data.
-
-     This function is a convenience wrapper to decode, and is equivalent to:
-     ```swift
-        let decoder = ProtobufDecoder()
-        let value = try decoder.decode(MyType.self, from: data)
-     ```
-     Uses the default decoding options.
-     - Parameter type: The type of the value to decode from the supplied data.
-     - Parameter data: The binary data to decode.
-     - Returns: A value of the specified type, if the decoder can parse the data.
-     - Throws: Errors of type `ProtobufDecodingError`
+     Decode a single value from binary data using a default decoder.
+     - Parameter type: The type to decode.
+     - Parameter data: The binary data which encodes the instance
+     - Returns: The decoded instance
+     - Throws: Errors of type `DecodingError` or `ProtobufDecodingError`
      */
     public static func decode<T>(_ type: T.Type = T.self, from data: Data) throws -> T where T: Decodable {
-        let decoder = ProtobufDecoder()
-        return try decoder.decode(from: data)
+        try ProtobufDecoder().decode(type, from: data)
     }
 }

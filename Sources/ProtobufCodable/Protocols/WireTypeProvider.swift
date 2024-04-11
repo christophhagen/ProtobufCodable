@@ -5,7 +5,7 @@ import Foundation
 
  To understand more about wire types, see the [Protocol Buffer Message Structure](https://developers.google.com/protocol-buffers/docs/encoding#structure)
  */
-public protocol WireTypeProvider {
+protocol WireTypeProvider {
 
     /**
      The wire type used for encoding of the type.

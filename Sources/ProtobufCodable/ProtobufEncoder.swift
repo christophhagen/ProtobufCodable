@@ -1,136 +1,98 @@
 import Foundation
 
 /**
- An object that encodes instances of a data type as binary data.
+ An encoder to convert `Codable` objects to protobuf binary data.
 
- # Overview
+ The encoder provides only limited compatibility with Google's Protocol Buffers.
 
- The example below shows how to encode an instance of a simple `GroceryProduct` type to binary data. The type adopts `Codable` so that it’s encodable as binary data using a `ProtobufEncoder` instance.
+ Encoding unsupported data types causes `ProtobufEncodingError` errors.
+
+ Construct an encoder when converting instances to binary data, and feed the message(s) into it:
+
  ```swift
- struct GroceryProduct: Codable {
-     var name: String
-     var points: Int
-     var description: String?
- }
-
- let pear = GroceryProduct(name: "Pear", points: 250, description: "A ripe pear.")
+ let message: Message = ...
 
  let encoder = ProtobufEncoder()
-
- let data = try encoder.encode(pear)
+ let data = try encoder.encode(message)
  ```
 
- Use a ``ProtobufDecoder`` to reconstruct objects from the produced binary data.
-
- # Binary format
-
- The binary format is largely compatible with the [Google Protocol Buffer encoding](https://developers.google.com/protocol-buffers).
-
- In contrast to Protobuf, the binary encoder also supports string keys, optionals, a larger variety of integers as well as encoding and decoding of single values, arrays and dictionaries.
-
+ - Note: An ecoder can be used to encode multiple messages.
  */
 public struct ProtobufEncoder {
-
-    // MARK: Encoding options
-
-    enum UserInfoKey: String {
-        
-        /// The user info key for omitting default values
-        case omitDefaultValues = "omitDefaults"
-
-        /// The user info key for hashing string keys to reduce binary size
-        case hashStringKeys = "hashStrings"
-
-        /// The user info key when enforcing the use of integer keys
-        case requireIntegerCodingKeys = "forceIntegers"
-
-        /// The user info key when enforcing the use of integer keys
-        case requireProtobufCompatibility = "protobufCompatible"
-
-        var userKey: CodingUserInfoKey {
-            .init(rawValue: rawValue)!
-        }
-    }
-
-    /**
-     Prevent default values (like `zero`) from being written to binary data.
-     
-     Omitting defaults is default protobuf behaviour to reduce the binary size.
-     - Warning: If you specify `true` when encoding objects with optional values,
-     any default value will be decoded as `nil`.
-     */
-    public var omitDefaultValues = false
-
-    /**
-     Hash string keys of properties into integers to reduce binary size.
-     - Warning: Hashing may introduce decoding errors when string keys map to the same hash.
-     Carefully check wether objects can be successfully decoded before use.
-     */
-    var hashStringKeys = false
-
-    /**
-     Require that objects specify integer coding keys for each property to encode.
-
-     Encoding non-compliant objects will result in a ``ProtobufEncodingError.missingIntegerCodingKey``
-     */
-    public var requireIntegerCodingKeys = false
     
+    /// The user info key for the ``sortKeysDuringEncoding`` option.
+    public static let userInfoSortKey: CodingUserInfoKey = .init(rawValue: "sortByKey")!
+
     /**
-     Fail if any components are present in the encoded object which are not compatible to Google Protobuf.
-     
-     Failures will result in a ``ProtobufEncodingError.notProtobufCompatible``
+     Sort keyed data in the binary representation.
+
+     Enabling this option causes all data in keyed containers (e.g. `Dictionary`, `Struct`) to be sorted by their keys before encoding.
+     This option can enable deterministic encoding where the binary output is consistent across multiple invocations.
+
+     - Warning: Output will not be deterministic when using `Set`, or `Dictionary<Key, Value>` where `Key` is not `String` or `Int`.
+
+     Enabling this option introduces computational overhead due to sorting, which can become significant when dealing with many entries.
+
+     This option has no impact on decoding using `BinaryDecoder`.
+
+     Enabling this option will add the `CodingUserInfoKey(rawValue: "sortByKey")` to the `userInfo` dictionary.
+     This key is also available as ``userInfoSortKey``
+
+     - Note: The default value for this option is `false`.
      */
-    var requireProtobufCompatibility = false
-
-    private var keys: [UserInfoKey : Bool] {
-        [.omitDefaultValues : omitDefaultValues,
-         .hashStringKeys : hashStringKeys,
-         .requireIntegerCodingKeys : requireIntegerCodingKeys,
-         .requireProtobufCompatibility : requireProtobufCompatibility]
-    }
-
-    /// The user info to pass to all nodes
-    private var userInfo: [CodingUserInfoKey : Any] {
-        keys.reduce(into: [:]) {
-            $0[$1.key.userKey] = $1.value
+    public var sortKeysDuringEncoding: Bool {
+        get {
+            userInfo[ProtobufEncoder.userInfoSortKey] as? Bool ?? false
         }
-    }
-
-    // MARK: Creating an encoder
-
-    /**
-     Create an encoder.
-
-     An encoder is used to convert `Encodable` types to binary data.
-     A single instance can be used to convert multiple objects.
-     */
-    public init() { }
-
-    /**
-     Convert an `Encodable` type to binary data.
-     - Parameter value: The object to convert to data
-     - Returns: The binary data
-     - Throws: Errors of type `ProtobufEncodingError`
-     */
-    public func encode(_ value: Encodable) throws -> Data {
-        if value is Dictionary<AnyHashable, Any> {
-            let encoder = DictionaryEncoder(path: [], key: nil, info: userInfo)
-            try value.encode(to: encoder)
-            return try encoder.encodedData()
-        } else {
-            let encoder = TopLevelEncoder(path: [], key: nil, info: userInfo)
-            try value.encode(to: encoder)
-            return try encoder.encodedData()
+        set {
+            userInfo[ProtobufEncoder.userInfoSortKey] = newValue
         }
     }
 
     /**
-     Convert an `Encodable` type to binary data using a default encoder.
-     - Parameter value: The object to convert to data
-     - Returns: The binary data
-     - Throws: Errors of type `ProtobufEncodingError`
+     Any contextual information set by the user for encoding.
+
+     This dictionary is passed to all containers during the encoding process.
+
+     Contains also keys for any custom options set for the encoder.
+     See `sortKeysDuringEncoding`.
      */
-    public static func encode(_ value: Encodable) throws -> Data {
+    public var userInfo = [CodingUserInfoKey : Any]()
+
+    /**
+     Create a new binary encoder.
+     - Note: An encoder can be used to encode multiple messages.
+     */
+    public init() {
+
+    }
+
+    /**
+     Encode a value to binary data.
+     - Parameter value: The value to encode
+     - Returns: The encoded data
+     - Throws: Errors of type `EncodingError` or `ProtobufEncodingError`
+     */
+    public func encode<T>(_ value: T) throws -> Data where T: Encodable {
+        let root = TopLevelEncoder(userInfo: userInfo)
+        try value.encode(to: root)
+        return try root.containedData()
+    }
+
+    /**
+     Encode a single value to binary data using a default encoder.
+     - Parameter value: The value to encode
+     - Returns: The encoded data
+     - Throws: Errors of type `EncodingError` or `ProtobufEncodingError`
+     */
+    public static func encode<T>(_ value: T) throws -> Data where T: Encodable {
         try ProtobufEncoder().encode(value)
+    }
+
+    func getProtobufDefinition<T>(_ value: T) throws -> String where T: Encodable {
+        throw EncodingError.invalidValue(0, .init(codingPath: [], debugDescription: "Not implemented"))
+        //let root = try ProtoNode(encoding: "\(type(of: value))", path: [], info: userInfo)
+        //    .encoding(value)
+        //return try "syntax = \"proto3\";\n\n" + root.protobufDefinition()
     }
 }

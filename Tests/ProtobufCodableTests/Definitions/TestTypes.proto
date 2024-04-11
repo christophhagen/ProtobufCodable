@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+// A Struct with all primitive proto types
+message MessageWithPrimitives {
+
+    // Swift equivalent: `Double`
+    double double = 1;
+
+    // Swift equivalent: `Float`
+    float float = 2;
+
+    // Swift equivalent: `Int32`
+    int32 int32 = 3;
+
+    // Swift equivalent: `Int64`, or `Int`
+    int64 int64 = 4;
+
+    // Swift equivalent: `UInt32`
+    uint32 uint32 = 5;
+
+    // Swift equivalent: `UInt64`
+    uint64 uint64 = 6;
+
+    // Swift equivalent: `Signed<Int32>`
+    sint32 sint32 = 7;
+
+    // Swift equivalent: `Signed<Int64>`
+    sint64 sint64 = 8;
+
+    // Swift equivalent: `Fixed<UInt32>`
+    fixed32 fixed32 = 9;
+
+    // Swift equivalent: `Fixed<UInt64>`
+    fixed64 fixed64 = 10;
+
+    // Swift equivalent: `Fixed<Int32>`
+    sfixed32 sfixed32 = 11;
+
+    // Swift equivalent: `Fixed<Int64>`, `Fixed<Int>`
+    sfixed64 sfixed64 = 12;
+
+    // Swift equivalent: `Bool`
+    bool bool = 13;
+
+    // Swift equivalent: `String`
+    string string = 14;
+
+    // Swift equivalent: `Data`
+    bytes bytes = 15;
+}
+
+message MessageWithArrays {
+
+    // Swift equivalent: `[Double]`
+    repeated double double = 1;
+
+    // Swift equivalent: `[Float]`
+    repeated float float = 2;
+
+    // Swift equivalent: `[Int32]`
+    repeated int32 int32 = 3;
+
+    // Swift equivalent: `[Int64]`, or `[Int]`
+    repeated int64 int64 = 4;
+
+    // Swift equivalent: `[UInt32]`
+    repeated uint32 uint32 = 5;
+
+    // Swift equivalent: `[UInt64]`
+    repeated uint64 uint64 = 6;
+
+    // Swift equivalent: `[Signed<Int32>]`
+    repeated sint32 sint32 = 7;
+
+    // Swift equivalent: `[Signed<Int64>]`
+    repeated sint64 sint64 = 8;
+
+    // Swift equivalent: `[Fixed<UInt32>]`
+    repeated fixed32 fixed32 = 9;
+
+    // Swift equivalent: `[Fixed<UInt64>]`
+    repeated fixed64 fixed64 = 10;
+
+    // Swift equivalent: `[Fixed<Int32>]`
+    repeated sfixed32 sfixed32 = 11;
+
+    // Swift equivalent: `[Fixed<Int64>]`, `[Fixed<Int>]`
+    repeated sfixed64 sfixed64 = 12;
+
+    // Swift equivalent: `[Bool]`
+    repeated bool bool = 13;
+
+    // Swift equivalent: `[String]`
+    repeated string string = 14;
+
+    // Swift equivalent: `[Data]`
+    repeated bytes bytes = 15;
+}
+
+message MessageWithUnpackedArrays {
+
+    // Swift equivalent: `[Double]`
+    repeated double double = 1 [packed=false];
+
+    // Swift equivalent: `[Float]`
+    repeated float float = 2 [packed=false];
+
+    // Swift equivalent: `[Int32]`
+    repeated int32 int32 = 3 [packed=false];
+
+    // Swift equivalent: `[Int64]`, or `[Int]`
+    repeated int64 int64 = 4 [packed=false];
+
+    // Swift equivalent: `[UInt32]`
+    repeated uint32 uint32 = 5 [packed=false];
+
+    // Swift equivalent: `[UInt64]`
+    repeated uint64 uint64 = 6 [packed=false];
+
+    // Swift equivalent: `[Signed<Int32>]`
+    repeated sint32 sint32 = 7 [packed=false];
+
+    // Swift equivalent: `[Signed<Int64>]`
+    repeated sint64 sint64 = 8 [packed=false];
+
+    // Swift equivalent: `[Fixed<UInt32>]`
+    repeated fixed32 fixed32 = 9 [packed=false];
+
+    // Swift equivalent: `[Fixed<UInt64>]`
+    repeated fixed64 fixed64 = 10 [packed=false];
+
+    // Swift equivalent: `[Fixed<Int32>]`
+    repeated sfixed32 sfixed32 = 11 [packed=false];
+
+    // Swift equivalent: `[Fixed<Int64>]`, `[Fixed<Int>]`
+    repeated sfixed64 sfixed64 = 12 [packed=false];
+
+    // Swift equivalent: `[Bool]`
+    repeated bool bool = 13 [packed=false];
+}
+
+/// A message containing a single other message
+message MessageWithMessages {
+
+    MessageWithPrimitives one = 1;
+
+    MessageWithPrimitives two = 2;
+}
+
+enum ProtoEnum {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+}
+
+message MessageWithEnum {
+
+    ProtoEnum value = 1;
+}
+
+message MessageWithOneOf {
+
+    int32 value = 1;
+
+    oneof MyOneOf {
+        string string = 2;
+        bytes bytes = 3;
+        int32 int32 = 4;
+        MessageWithPrimitives message = 5;
+    }
+}
+
+message MessageWithMaps {
+
+    map<string,bytes> stringToBytes = 1;
+
+    map<uint32,string> uintToString = 2;
+
+    map<int64, MessageWithPrimitives> intToMessage = 3;
+}
+
+/*
+
+message Outer {
+
+    SimpleStruct inner = 1;
+
+    SimpleStruct more = 2;
+}
+
+message Outer2 {
+
+    repeated SimpleStruct values = 1;
+}
+
+// A container to test different map types
+message MapContainer {
+
+    map<string,bytes> x = 1;
+
+    map<uint32,string> y = 2;
+}
+
+
+
+message FieldNumberTest {
+
+    bool low = 1;
+
+    bool high = 0x1FFFFFFF;
+}
+
+message OneOfContainer {
+    
+    oneof alternatives {
+        int64 integer = 1;
+        string text = 2;
+    }
+}
+*/

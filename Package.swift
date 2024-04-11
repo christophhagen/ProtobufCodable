@@ -4,23 +4,22 @@ import PackageDescription
 
 let package = Package(
     name: "ProtobufCodable",
+    platforms: [.macOS(.v10_13), .iOS(.v11), .tvOS(.v11), .watchOS(.v4)],
     products: [
         .library(
             name: "ProtobufCodable",
             targets: ["ProtobufCodable"]),
     ],
     dependencies: [
-        .package(name: "SwiftProtobuf",
-                 url: "https://github.com/apple/swift-protobuf",
-                 from: "1.17.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.26.0"),
     ],
     targets: [
         .target(
-            name: "ProtobufCodable",
-            dependencies: []),
+            name: "ProtobufCodable"),
         .testTarget(
             name: "ProtobufCodableTests",
-            dependencies: ["ProtobufCodable", "SwiftProtobuf"],
-            exclude: ["Helper/TestMessages.proto"]),
+            dependencies: [
+                "ProtobufCodable",
+                    .product(name: "SwiftProtobuf", package: "swift-protobuf")]),
     ]
 )

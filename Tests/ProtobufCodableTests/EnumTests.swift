@@ -1,89 +1,190 @@
 import XCTest
-@testable import ProtobufCodable
-import SwiftProtobuf
+import ProtobufCodable
 
-private struct EnumContainer: Codable, Equatable, ProtobufComparable {
-    
-    var protobuf: PB_EnumContainer {
-        .with { $0.intEnum = .init(rawValue: intEnum.rawValue)! }
-    }
-    
-    init() {
-        self.intEnum = .universal
-    }
-    
-    init(intEnum: TestEnum) {
-        self.intEnum = intEnum
-    }
-    
-    init(protoObject: PB_EnumContainer) {
-        self.intEnum = TestEnum(rawValue: protoObject.intEnum.rawValue) ?? .universal
-    }
-    
-    typealias ProtobufType = PB_EnumContainer
-    
-    enum TestEnum: Int, Codable {
-        case universal = 0
-        case other = 1
-        case third = 2
-    }
-    
-    var intEnum: TestEnum
-    
-    enum CodingKeys: Int, CodingKey {
-        case intEnum = 1
-    }
-}
+/**
+ let mirror = Mirror(reflecting: something)
+ mirror.displayStyle == .Enum
+ */
 
 final class EnumTests: XCTestCase {
 
-    enum NormalTest: Codable {
-        case a
+    private func compareToProto(_ value: StructWithEnum) throws {
+        try compare(value)
     }
 
-    func testEncodeEnum() throws {
-        // Note: Normal enums call KeyedEncoder.nestedContainer() with the case as
-        // a string CodingKey. The nestedContainer itself is empty
-        let input = Data([
-            11, // Wire type `stringKey`, key length 1
-            97, // Key `a`
-            2, // Wire type `lengthDelimited`
-            0 // Length 0
-        ])
-        try encoded(NormalTest.a, matches: input)
+    func testEnumInStruct() throws {
+        try compareToProto(.init(value: .one))
+        try compareToProto(.init(value: .zero))
     }
 
-    func testEnum() throws {
-        try roundTripCodable(NormalTest.a)
-    }
-    
-    func testIntEnum() throws {
+    func testEnumWithInt64() throws {
+        struct StructWithEnum: Codable, Equatable {
 
-        enum Test: Int, Codable {
-            case a = 123
-        }
+            let value: Enum
 
-        let t = Test.a
-        try roundTripCodable(t)
-    }
-    
-    func testNestedEnum() throws {
-        
-        struct Test: Codable, Equatable {
-            
-            let a: TestEnum
-            
-            enum TestEnum: Codable {
-                case one
-                case two
+            enum Enum: Int64, Codable {
+                case zero = 0
+                case one = 1
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
             }
         }
-        
-        let t = Test(a: .two)
-        try roundTripCodable(t)
+        _ = try ProtobufEncoder.encode(StructWithEnum(value: .one))
     }
-    
-    func testProtobufEnum() throws {
-        try roundTripProtobuf(EnumContainer(intEnum: .other))
+
+    func testEnumWithInt32() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: Int32, Codable {
+                case zero = 0
+                case one = 1
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        _ = try ProtobufEncoder.encode(StructWithEnum(value: .one))
+    }
+
+    func testEnumWithInvalidRawValue() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: UInt64, Codable {
+                case zero = 0
+                case one = 1
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        do {
+            _ = try ProtobufEncoder().encode(StructWithEnum(value: .one))
+            XCTFail("Enums with RawValue other than Int should fail")
+        } catch EncodingError.invalidValue(let value, let context) {
+            XCTAssertPathsEqual(context.codingPath, [1])
+            guard let value = value  as? UInt64 else {
+                XCTFail("Expected offending value \(value) to be UInt64")
+                return
+            }
+            XCTAssertEqual(value, 1)
+        }
+    }
+
+    func testOptionalEnumInStruct() throws {
+        struct StructWithEnum: Codable, Equatable, ProtoComparable {
+
+            let value: Enum?
+
+            enum Enum: Int, Codable {
+                case zero = 0
+                case one = 1
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+
+            var proto: MessageWithEnum {
+                .with {
+                    if let value {
+                        $0.value = .init(rawValue: value.rawValue)!
+                    }
+                }
+            }
+        }
+        try compare(StructWithEnum(value: .one))
+        try compare(StructWithEnum(value: nil))
+    }
+
+    func testOneAboveEnumRawValueLowerLimit() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: Int, Codable {
+                case min = -2147483648
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        _ = try ProtobufEncoder().encode(StructWithEnum(value: .min))
+    }
+
+    func testEnumRawValueLowerLimit() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: Int, Codable {
+                case min = -2147483649
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        do {
+            _ = try ProtobufEncoder().encode(StructWithEnum(value: .min))
+            XCTFail("Enums with unsupported raw value should fail")
+        } catch EncodingError.invalidValue(let value, let context) {
+            XCTAssertPathsEqual(context.codingPath, [1])
+            guard let value = value  as? Int else {
+                XCTFail("Expected offending value \(value) to be Int, not \(type(of: value))")
+                return
+            }
+            XCTAssertEqual(value, -2147483649)
+        }
+    }
+
+    func testOneBelowEnumRawValueUpperLimit() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: Int, Codable {
+                case min = 2147483647
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        _ = try ProtobufEncoder().encode(StructWithEnum(value: .min))
+    }
+
+    func testEnumRawValueUpperLimit() throws {
+        struct StructWithEnum: Codable, Equatable {
+
+            let value: Enum
+
+            enum Enum: Int, Codable {
+                case min = 2147483648
+            }
+
+            enum CodingKeys: Int, CodingKey {
+                case value = 1
+            }
+        }
+        do {
+            _ = try ProtobufEncoder().encode(StructWithEnum(value: .min))
+            XCTFail("Enums with unsupported raw value should fail")
+        } catch EncodingError.invalidValue(let value, let context) {
+            XCTAssertPathsEqual(context.codingPath, [1])
+            guard let value = value  as? Int else {
+                XCTFail("Expected offending value \(value) to be Int, not \(type(of: value))")
+                return
+            }
+            XCTAssertEqual(value, 2147483648)
+        }
     }
 }
