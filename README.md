@@ -2,8 +2,10 @@
 
 This framework provides encoding and decoding of Swift `Codable` types, which is compatible with the [Google Protocol Buffer](https://developers.google.com/protocol-buffers) format.
 
-**Note** `ProtobufCodable` only supports a subset of `Codable`, due to the limitations of Protocol Buffers. 
-If you're looking for a binary encoder with full support of all `Codable` features, have a look at `BinaryCodable`.
+### Note
+
+`ProtobufCodable` only supports a subset of `Codable`, due to the limitations of Protocol Buffers. 
+If you're looking for a binary encoder with full support of all `Codable` features, have a look at [BinaryCodable](https://github.com/christophhagen/BinaryCodable).
 
 ## Why?
 
