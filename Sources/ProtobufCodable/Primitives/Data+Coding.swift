@@ -13,10 +13,6 @@ extension Data: EncodablePrimitive {
     var encodedData: Data {
         self
     }
-
-    var needsLengthData: Bool {
-        true
-    }
 }
 
 extension Data: DecodablePrimitive {

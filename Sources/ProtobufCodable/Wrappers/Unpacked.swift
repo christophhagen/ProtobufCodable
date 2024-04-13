@@ -38,9 +38,9 @@ extension Unpacked: Equatable where S: Equatable {
 extension Unpacked: EncodableContainer where S: CodablePrimitive {
 
     func encode(forKey key: Int) -> Data {
-        wrappedValue.map {
+        wrappedValue.mapAndJoin {
             $0.encodeAlways(forKey: key)
-        }.joinedData
+        }
     }
 
 

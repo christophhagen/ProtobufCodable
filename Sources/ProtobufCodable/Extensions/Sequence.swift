@@ -16,3 +16,15 @@ extension Sequence {
         return count
     }
 }
+
+extension Sequence {
+
+    func mapAndJoin(_ closure: (Element) throws -> Data) rethrows -> Data {
+        var result = Data()
+        for (value) in self {
+            let data = try closure(value)
+            result.append(data)
+        }
+        return result
+    }
+}

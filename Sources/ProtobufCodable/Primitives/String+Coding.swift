@@ -13,10 +13,6 @@ extension String: EncodablePrimitive {
     var encodedData: Data {
         data(using: .utf8)!
     }
-
-    var needsLengthData: Bool {
-        true
-    }
 }
 
 extension String: DecodablePrimitive {

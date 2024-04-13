@@ -3,15 +3,15 @@ import Foundation
 extension Dictionary: EncodableContainer where Key: ProtobufMapKey, Value: Encodable {
 
     func encodeForUnkeyedContainer() throws -> Data {
-        try encodedElements().map {
+        try encodedElements().mapAndJoin {
             $0.encodeForUnkeyedContainer()
-        }.joinedData
+        }
     }
 
     func encode(forKey key: Int) throws -> Data {
-        try encodedElements().map {
+        try encodedElements().mapAndJoin {
             $0.encode(forKey: key)
-        }.joinedData
+        }
     }
 
     private func encodedElements() throws -> [Data] {

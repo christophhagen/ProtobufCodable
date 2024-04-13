@@ -80,13 +80,13 @@ extension UnkeyedEncoder: EncodableContainer {
         }
         guard canBePacked else {
             // Encode each field separately with key
-            return try encodedValues
-                .map { try $0.encode(forKey: key) }
-                .joinedData
+            return try encodedValues.mapAndJoin {
+                try $0.encode(forKey: key)
+            }
         }
         // Encode all fields into a variable-length container
         let keyData = WireType.len.encoded(with: key)
-        let data = try encodedValues.map { try $0.encodeForUnkeyedContainer() }.joinedData
+        let data = try encodedValues.mapAndJoin { try $0.encodeForUnkeyedContainer() }
         return keyData + data.count.variableLengthEncoded + data
     }
 

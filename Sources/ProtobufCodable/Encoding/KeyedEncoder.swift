@@ -101,8 +101,8 @@ extension KeyedEncoder: EncodableContainer {
     }
 
     private func encode<T>(elements: T) throws -> Data where T: Collection, T.Element == (key: Int, value: EncodableContainer) {
-        try elements.map { key, value in
+        try elements.mapAndJoin { key, value in
             try value.encode(forKey: key)
-        }.joinedData
+        }
     }
 }
